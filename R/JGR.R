@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.4-3
+# Package version: 1.4-5
 #
-# $Id: JGR.R,v 1.52 2006/08/09 11:25:57 helbigm Exp $
+# $Id: JGR.R,v 1.54 2006/08/17 10:48:53 helbigm Exp $
 # (C)Copyright 2004-2006 Markus Helbig
 #
 
@@ -307,7 +307,7 @@ JGR <- function(update=FALSE)
       lt <- paste(R.home(),"library",sep=.Platform$file.sep)
       if (.Platform$OS.type == "unix" && .Platform$pkgType != "mac.binary")
         lt <- .libPaths()[1]
-      cran <- getOption("repos")[["CRAN"]]
+      cran <- getOption("repos")
       if (cran == "@CRAN@") cran <- "http://cran.r-project.org/"
       return (install.packages(c("JGR","rJava","JavaGD"), lt, c(cran,"http://www.rosuda.org/")))
     }
