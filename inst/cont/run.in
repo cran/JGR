@@ -29,7 +29,7 @@ if [ -r $HOME/.JGRprefsrc ]; then
         export R_HOME
     fi
     if [ "$libs" ]; then
-        export R_LIBS=$libs
+        export R_LIBS=$R_LIBS:$libs
     fi
     if [ "$packages" ]; then
         export R_DEFAULT_PACKAGES=$packages

@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.4-10
+# Package version: 1.4-11
 #
-# $Id: JGR.R,v 1.62 2006/09/11 13:58:04 helbigm Exp $
+# $Id: JGR.R,v 1.64 2006/09/25 08:31:15 helbigm Exp $
 # (C)Copyright 2004-2006 Markus Helbig
 #
 
@@ -332,7 +332,7 @@ jgr.addMenuSeparator <- function(menu) {
 .generate.run.script <- function(target=NULL) {
   run.template <- paste(.jgr.pkg.path,"cont","run.in",sep=.Platform$file.sep)
   rt <- readLines(run.template)
-  settings <- c("R_SHARE_DIR", "R_INCLUDE_DIR", "R_DOC_DIR",
+  settings <- c("R_SHARE_DIR", "R_INCLUDE_DIR", "R_DOC_DIR", "R_LIBS", 
                 "R_HOME", "JAVA_HOME", "JAVA_LD_PATH", "JAVA_PROG")
   sl <- list()
   for (i in settings) sl[[i]] <- Sys.getenv(i)
