@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.4-11
+# Package version: 1.4-12
 #
-# $Id: JGR.R,v 1.64 2006/09/25 08:31:15 helbigm Exp $
+# $Id: JGR.R,v 1.65 2006/10/22 12:13:21 helbigm Exp $
 # (C)Copyright 2004-2006 Markus Helbig
 #
 
@@ -180,9 +180,16 @@ jgr.addMenuSeparator <- function(menu) {
 {
     result <- c()
     if (regexpr('\\$$', x) > -1) {
-        r <- names(get(sub('\\$', '', x)))
+         r <- names(get(sub('\\$', '', x)))
+         for (i in 1:length(r)) {
+             result <- c(result,r[i])
+         }    
+    }
+    else if (regexpr('\\$', x) > -1) {
+        r <- names(get(substr(x,0,gregexpr("\\$",x)[[1]][1]-1)))        
         for (i in 1:length(r)) {
-            result <- c(result,sub("\" +","\"",sub(" +\"$","\"",paste("\"",r[i],"\""))))
+            if (regexpr(strsplit(x,'\\$')[[1]][2],r[i]) > -1)
+            result <- c(result,r[i])
         }
     }
     else {
