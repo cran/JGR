@@ -1,0 +1,79 @@
+#!/bin/sh
+
+PNAME=JGR
+SWD=`pwd`
+echo "Removing previous dist ..."
+rm -rf /tmp/${PNAME}
+echo "Copying package base ..."
+cp -r ../${PNAME} /tmp
+
+
+JARFILE=$1
+if [ -z $JARFILE ]; then 
+    JARFILE=JGR.jar; 
+fi
+if [ -e $JARFILE ]; then
+    JARFILE=$1
+    echo "Using custom JAR file $JARFILE"
+else
+    echo "Compile JGR.jar from Sources"
+    if [ -e ../../../org/Makefile ]; then
+    	cd ../../../org
+	echo "Remove old $JARFILE"
+	make clean
+	echo "Make new one"
+	make JGR.jar
+	cd -
+	JARFILE=../../../org/JGR.jar
+    fi
+    if [ ! -e $JARFILE ]; then 
+	echo "Compilation with Makefile failed (iplots ...)"
+        if [ `uname` == Darwin ]; then 
+            echo "Try to use Xcode for compilation"
+	    cd ../../../org/rosuda/projects/jgr
+	    rm -rf build
+	    xcodebuild -project JGR.xcodeproj -configuration Deployment SYMROOT=build
+	    cd -
+	    JARFILE=../../../org/rosuda/projects/jgr/build/Deployment/JGR.app/Contents/Resources/Java/JGR.jar
+        fi
+    fi
+fi
+
+#JRI=$2
+#if [ -z $JRI ]; then JRI=libjri.jnilib; fi
+#if [ -e $JRI ]; then 
+#	JRI = $1
+#	echo "Using custom library file $JRI" 
+#fi
+
+mkdir -p /tmp/${PNAME}/inst/cont
+echo "Copying $JARFILE to package"
+cp $JARFILE /tmp/${PNAME}/inst/cont
+echo "Copying run script template"
+cp run.in /tmp/${PNAME}/inst/cont
+#echo "Copying $JRI to package"
+#cp $JRI /tmp/${PNAME}/inst/cont
+
+
+rm -f /tmp/${PNAME}/mkdist
+
+cd /tmp/${PNAME}
+
+echo "Removing CVS and backup stuff ..."
+find . -name CVS | xargs rm -rf
+find . -name \*~ | xargs rm -f
+
+echo "Updating version ..."
+VER=`awk -v ORS= '/Package version:/ { print $4 }' R/JGR.R`
+#VER=`awk -v ORS= '/JavaGD v/ { print substr($6,2) }' src/javaGD.h`
+echo "JGR version ${VER}"
+cat DESCRIPTION| sed "s/Version:.*/Version: ${VER}/" > d
+mv d DESCRIPTION
+echo "Creating package ..."
+cd ..
+tar fcz ${PNAME}_${VER}.tar.gz ${PNAME}
+cd ${SWD}
+cp /tmp/${PNAME}_${VER}.tar.gz ..
+rm -rf /tmp/${PNAME}
+echo "Done."
+ls -l ../${PNAME}_${VER}.tar.gz

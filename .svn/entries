@@ -1,0 +1,86 @@
+8
+
+dir
+86
+svn://svn.rforge.net/JGR/trunk
+svn://svn.rforge.net/JGR
+
+
+
+2006-10-22T12:13:21.000000Z
+86
+helbigm
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+72eb45be-53fb-4768-8dbe-45f777f6b5f0
+
+R
+dir
+
+DESCRIPTION
+file
+
+
+
+
+2006-11-15T18:53:32.000000Z
+93f5891ce399cce52ce28cd0d8ded02d
+2006-10-03T06:42:45.000000Z
+85
+helbigm
+has-props
+
+version
+file
+
+
+
+
+2006-11-15T18:53:32.000000Z
+54b80fe871b3a51d6746bfdc5ccaf0d4
+2004-07-28T14:38:11.000000Z
+20
+admin
+has-props
+
+run.in
+file
+
+
+
+
+2006-11-15T18:53:32.000000Z
+b29f55d2ed5d7ab046f60566258b300d
+2006-09-25T08:31:15.000000Z
+83
+helbigm
+has-props
+
+man
+dir
+
+mkdist
+file
+
+
+
+
+2006-11-15T18:53:32.000000Z
+4aac50ab8c24258b2baa3fa757f82908
+2006-08-20T18:16:22.000000Z
+75
+urbaneks
+has-props
+

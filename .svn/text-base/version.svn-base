@@ -1,0 +1,9 @@
+#!/bin/sh
+
+PNAME=JGR
+VER=`awk -v ORS= '/Package version:/ { print $4 }' R/JGR.R`
+if test "$1" == "-f"; then 
+    echo "${PNAME}_${VER}.tar.gz"
+else
+    echo "${VER}"
+fi
