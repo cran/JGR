@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.4-5
+# Package version: 1.4-7
 #
-# $Id: JGR.R,v 1.54 2006/08/17 10:48:53 helbigm Exp $
+# $Id: JGR.R,v 1.58 2006/08/21 16:49:46 urbaneks Exp $
 # (C)Copyright 2004-2006 Markus Helbig
 #
 
@@ -14,23 +14,39 @@ library(utils)
 
 # library initialization:
 .First.lib <- function(lib, pkg) {
-    #cat("\nLoading additional JGR support...\n")
+  ##cat("\nLoading additional JGR support...\n")
   library(rJava)
-        je <- as.environment(match("package:JGR", search()))
-        assign(".jgr.pkg.path", paste(lib,pkg,sep=.Platform$file.sep), je)
-
-	  # we supply our own JavaGD class
-	Sys.putenv("JAVAGD_CLASS_NAME"="org/rosuda/JGR/toolkit/JavaGD")
-
-	# now load rJava for callbacks
-	cp<-paste(lib,pkg,"cont","JGR.jar",sep=.Platform$file.sep)
-	.jinit(cp)
-
-        if (!.jcall("org/rosuda/JGR/JGR","Z","isJGRmain")) {
-          cat("\nPlease use the corresponding JGR launcher to start JGR.\nRun JGR() for details. You can also use JGR(update=TRUE) to update JGR.\n");
-          return(TRUE);
-        }
+  je <- as.environment(match("package:JGR", search()))
+  assign(".jgr.pkg.path", paste(lib,pkg,sep=.Platform$file.sep), je)
+  assign(".jgr.works", FALSE, je)
+  #assign(".jgr.env", new.env(), .je)
   
+  ## we supply our own JavaGD class
+  Sys.putenv("JAVAGD_CLASS_NAME"="org/rosuda/JGR/toolkit/JavaGD")
+
+  ## now load rJava for callbacks
+  ## strictly speaking we should not need to add JGR, because
+  ## the launcher must set the correct classpath anyway
+  cp <- paste(lib, pkg, "cont", "JGR.jar",sep=.Platform$file.sep)
+  .jinit(cp)
+
+  ## next make sure and JRI and iBase are present
+  add.classes <- character()
+  if (is.jnull(.jfindClass("org/rosuda/JRI/REXP",silent=TRUE)))
+    add.classes <- paste(installed.packages()["rJava","LibPath"],"rJava","jri","JRI.jar",sep=.Platform$file.sep)
+  if (is.jnull(.jfindClass("org/rosuda/ibase/Common",silent=TRUE)))
+    add.classes <- c(add.classes,paste(installed.packages()["iplots","LibPath"],"iplots","cont","iplots.jar",sep=.Platform$file.sep))
+
+  ## if any classes are missing or JGR was not started using main method, get out
+  ## this should be true only if JGR was loaded into a "regular" R
+  if (length(add.classes)>0 || !.jcall("org/rosuda/JGR/JGR","Z","isJGRmain")) {
+    cat("\nPlease use the corresponding JGR launcher to start JGR.\nRun JGR() for details. You can also use JGR(update=TRUE) to update JGR.\n\n")
+    return(TRUE)
+  }
+
+  ## JGR actually works
+  assign(".jgr.works", TRUE, je)
+
 	# set JGR options unless the user doesn't want us to
 	if (Sys.getenv("JGR_NO_OPTIONS")=="")
     	jgr.set.options()
@@ -56,6 +72,7 @@ library(utils)
 
 
 package.manager <- function() {
+  if (!.jgr.works) { cat("package.manager() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	f <- .jnew("org/rosuda/JGR/JGRPackageManager")
 	invisible(.jcall(f,,"setVisible",TRUE))
 }
@@ -63,6 +80,7 @@ package.manager <- function() {
 installPackages <-
 function (contriburl = NULL, type = "binaries") 
 {
+  if (!.jgr.works) { cat("installPackages() cannot be used outside JGR.\n"); return(invisible(NULL)) }
     if (type == "binaries" && Sys.info()[["sysname"]] == "Darwin") {
         if (R.version$major >= 2 && R.version$minor >= 2) 
             a <- available.packages(contriburl = contrib.url(getOption("repos"), 
@@ -91,15 +109,18 @@ function (contriburl = NULL, type = "binaries")
 }
 
 object.browser <- function() {
+  if (!.jgr.works) { cat("object.browser() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	f <- .jnew("org/rosuda/JGR/JGRObjectManager")
 	invisible(.jcall(f,,"setVisible",TRUE))
 }
 
 jgr.pager <- function(file, header, title, delete.file) {
+  if (!.jgr.works) { cat("jgr.pager() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	invisible(.jcall("org/rosuda/JGR/toolkit/TextPager",,"launchPager",as.character(file), as.character(header), as.character(title), as.logical(delete.file)))
 }
 
 jgr.set.options <- function(..., useJavaGD=TRUE, useJGRpager=TRUE) {
+  if (!.jgr.works) { cat("jgr.set.options() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	if (useJavaGD) {
     	require(JavaGD)
 		options(device="JavaGD")
@@ -112,17 +133,29 @@ jgr.set.options <- function(..., useJavaGD=TRUE, useJGRpager=TRUE) {
 # add new menus at runtime to JGR Console
 
 jgr.addMenu <- function(name) {
+  if (!.jgr.works) { cat("jgr.addMenu() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	invisible(.jcall("org/rosuda/JGR/JGR","V","addMenu",as.character(name)))
 }
 
-jgr.addMenuItem <- function(menu,name,command) {
-	invisible(.jcall("org/rosuda/JGR/JGR","V","addMenuItem",as.character(menu),as.character(name),as.character(command)))
+jgr.addMenuItem <- function(menu, name, command) {
+  if (!.jgr.works) { cat("jgr.addMenuItem() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+  if (is.function(command))
+    command <- .jgr.register.function(command)
+  invisible(.jcall("org/rosuda/JGR/JGR","V","addMenuItem",as.character(menu),as.character(name),as.character(command)))
 }
 
 jgr.addMenuSeparator <- function(menu) {
+  if (!.jgr.works) { cat("jgr.addMenuSeparator() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	invisible(.jcall("org/rosuda/JGR/JGR","V","addMenuSeparator",as.character(menu)))
 }
 
+# creates a 'command' based on a function by calling the function without arguments
+.jgr.register.function <- function(fun) {
+  if (is.null(.GlobalEnv$.jgr.user.functions)) .GlobalEnv$.jgr.user.functions <- list()
+  fnc <- length(.GlobalEnv$.jgr.user.functions)+1
+  .GlobalEnv$.jgr.user.functions[[fnc]] <- fun
+  paste(".jgr.user.functions[[",fnc,"]]()",sep='')
+}
 
 # update JGR packages
 
@@ -164,6 +197,7 @@ jgr.addMenuSeparator <- function(menu) {
 }
 
 .refresh <- function() {
+  if (!.jgr.works) { cat(".refresh() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	invisible(.jcall("org/rosuda/JGR/JGR","V","setRLibs",as.character(.libPaths())))
 	invisible(.jcall("org/rosuda/JGR/JGR","V","setKeyWords",as.character(.refreshKeyWords())))
 	invisible(.jcall("org/rosuda/JGR/JGR","V","setObjects",as.character(.refreshObjects())))
@@ -295,9 +329,46 @@ jgr.addMenuSeparator <- function(menu) {
   invisible(NULL)
 }
 
+.generate.run.script <- function(target=NULL) {
+  run.template <- paste(.jgr.pkg.path,"cont","run.in",sep=.Platform$file.sep)
+  rt <- readLines(run.template)
+  settings <- c("R_SHARE_DIR", "R_INCLUDE_DIR", "R_DOC_DIR",
+                "R_HOME", "JAVA_HOME", "JAVA_LD_PATH", "JAVA_PROG")
+  sl <- list()
+  for (i in settings) sl[[i]] <- Sys.getenv(i)
+  if (nchar(sl[['JAVA_PROG']])==0) {
+    if (nchar(sl[['JAVA_HOME']])>0) {
+      jc <- paste(sl[['JAVA_HOME']],"bin","java",sep=.Platform$file.sep)
+      if (file.exists(jc)) sl[['JAVA_PROG']] <- jc
+    } else sl[['JAVA_PROG']] <- "java"
+  }
+  if (nchar(sl[['JAVA_LD_PATH']])==0) {
+    sl[['JAVA_LD_PATH']] <- Sys.getenv("R_JAVA_LD_LIBRARY_PATH")
+    if (nchar(sl[['JAVA_LD_PATH']])==0) {
+      sl[['JAVA_LD_PATH']] <- Sys.getenv("LD_LIBRARY_PATH")
+    }
+  }
+  sl[['JAVA_LD_PATH']] <- paste(sl[['JAVA_LD_PATH']],paste(installed.packages()["rJava","LibPath"],"rJava","jri",sep=.Platform$file.sep),sep=.Platform$path.sep)
+
+  sl[['JGR_JAR']] <- paste(.jgr.pkg.path,"cont","JGR.jar",sep=.Platform$file.sep)
+  sl[['JRI_JAR']] <- paste(installed.packages()["rJava","LibPath"],"rJava","jri","JRI.jar",sep=.Platform$file.sep)
+  sl[['IPLOTS_JAR']] <- paste(installed.packages()["iplots","LibPath"],"iplots","cont","iplots.jar",sep=.Platform$file.sep)
+
+  ## do all the substitutions
+  for (i in names(sl))
+    rt <- gsub(paste('@',i,'@',sep=''), sl[[i]], rt)
+
+  ## return back the entire file if there is no target
+  if (is.null(target)) return(rt)
+  
+  ## otherwise save into resulting file
+  writeLines(rt, target)
+}
+
+
 JGR <- function(update=FALSE)
   {
-    if (!update && .jcall("org/rosuda/JGR/JGR","Z","isJGRmain")) {
+    if (!update && .jgr.works && .jcall("org/rosuda/JGR/JGR","Z","isJGRmain")) {
       cat("JGR is already running. If you want to re-install or update JGR, use JGR(update=TRUE).\n")
       return(invisible(FALSE))
     }
@@ -309,7 +380,7 @@ JGR <- function(update=FALSE)
         lt <- .libPaths()[1]
       cran <- getOption("repos")
       if (cran == "@CRAN@") cran <- "http://cran.r-project.org/"
-      return (install.packages(c("JGR","rJava","JavaGD"), lt, c(cran,"http://www.rosuda.org/")))
+      return (install.packages(c("JGR","rJava","JavaGD","iplots"), lt, c(cran,"http://www.rosuda.org/")))
     }
     
     # FIXME: we should invoke a start script ...
@@ -325,9 +396,23 @@ JGR <- function(update=FALSE)
 
     runs <- paste(.jgr.pkg.path, "cont", "run", sep=.Platform$file.sep)
     if (file.exists(runs)) {
-      cat("Starting JGR ...\n")
-      system(paste("sh -c",runs))
+      cat("Starting JGR ...\n(You can use",runs,"to start JGR directly)\n")
+      system(paste("sh ",runs,"&"))
     } else {
-      cat("Please copy the run script from the JGRlinux package to",runs,", e.g.:\ncp run ",runs,"\nJGRlinux can be downloaded from http://www.rosuda.org/JGR/\n")
+      rs <- .generate.run.script()
+      wl <- try(writeLines(rs, runs),silent=TRUE)
+      if (inherits(wl,"try-error")) {
+        cat("Please consider running JGR() as root to create a start script in",runs,"automatically.\n")
+        fn <- tempfile("jgrs")
+        wl <- try(writeLines(rs, fn),silent=TRUE)
+        if (inherits(wl,"try-error"))
+          stop("Cannot create JGR start script. Please run JGR() as root to create a start script ",runs)
+        cat("Starting JGR ...\n")
+        system(paste("sh ",fn,"&"))
+        unlink(fn)
+      } else {
+        cat("Starting JGR run script. This can be done from the shell as well, just run\n",runs,"\n\n")
+        system(paste("sh ",runs,"&"))
+      }
     }
   }
