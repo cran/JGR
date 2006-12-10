@@ -1,9 +1,9 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.4-17
+# Package version: 1.5-2
 #
-# $Id: JGR.R 95 2007-05-01 20:31:30Z helbig $
-# (C)Copyright 2004-2006 Markus Helbig
+# $Id: JGR.R 114 2007-08-22 21:05:03Z urbanek $
+# (C)Copyright 2004,2005,2006,2007 Markus Helbig
 # (C)Copyright 2004,2006,2007 Simon Urbanek
 # Licensed under GPL v2
 
@@ -29,7 +29,7 @@ library(utils)
   ## now load rJava for callbacks
   ## strictly speaking we should not need to add JGR, because
   ## the launcher must set the correct classpath anyway
-  cp <- paste(lib, pkg, "cont", "JGR.jar",sep=.Platform$file.sep)
+  cp <- paste(lib, pkg, "java", "JGR.jar",sep=.Platform$file.sep)
   .jinit(cp)
 
   ## next make sure and JRI and iBase are present
@@ -37,7 +37,7 @@ library(utils)
   if (is.jnull(.jfindClass("org/rosuda/JRI/REXP",silent=TRUE)))
     add.classes <- paste(installed.packages()["rJava","LibPath"],"rJava","jri","JRI.jar",sep=.Platform$file.sep)
   if (is.jnull(.jfindClass("org/rosuda/ibase/Common",silent=TRUE)))
-    add.classes <- c(add.classes,paste(installed.packages()["iplots","LibPath"],"iplots","cont","iplots.jar",sep=.Platform$file.sep))
+    add.classes <- c(add.classes,paste(installed.packages()["iplots","LibPath"],"iplots","java","iplots.jar",sep=.Platform$file.sep))
 
   ## if any classes are missing or JGR was not started using main method, get out
   ## this should be true only if JGR was loaded into a "regular" R
@@ -158,23 +158,6 @@ jgr.addMenuSeparator <- function(menu) {
   .GlobalEnv$.jgr.user.functions[[fnc]] <- fun
   paste(".jgr.user.functions[[",fnc,"]]()",sep='')
 }
-
-# update JGR packages
-
-#update.JGR <- function(CRAN = getOption("CRAN"), contriburl = contrib.url(CRAN)) {
-#    available <- CRAN.packages(contriburl = contriburl)
-#    old <- old.packages(contriburl = contriburl,available = available)
-#    update <- NULL
-#    if (!is.null(old)) {
-#        for (k in 1:nrow(old)) {
-#        	  name <- old[k,"Package"]
-#        	  if (name == "JGR" || name == "rJava" || name == "JavaGD")
-#        	       update <- rbind(update, old[k, ])
-#        }
-#    }
-#    if (length(update) > 0) 
-#        install.packages(update[, "Package"], contriburl = contriburl)
-#}
 
 #'internal' functions for JGR, without them JGR is not able to survive
 
@@ -339,10 +322,10 @@ jgr.addMenuSeparator <- function(menu) {
 }
 
 .generate.run.script <- function(target=NULL) {
-  run.template <- paste(.jgr.pkg.path,"cont","run.in",sep=.Platform$file.sep)
+  run.template <- paste(.jgr.pkg.path,"scripts","run.in",sep=.Platform$file.sep)
   rt <- readLines(run.template)
   settings <- c("R_SHARE_DIR", "R_INCLUDE_DIR", "R_DOC_DIR", "R_LIBS", 
-                "R_HOME", "JAVA_HOME", "JAVA_LD_PATH", "JAVA_PROG")
+                "R_HOME", "JAVA_HOME", "JAVA_LD_PATH", "JAVA_PROG", "RJAVA")
   sl <- list()
   for (i in settings) sl[[i]] <- Sys.getenv(i)
   if (nchar(sl[['JAVA_PROG']])==0) {
@@ -357,12 +340,12 @@ jgr.addMenuSeparator <- function(menu) {
       sl[['JAVA_LD_PATH']] <- Sys.getenv("LD_LIBRARY_PATH")
     }
   }
-  sl[['JAVA_LD_PATH']] <- paste(sl[['JAVA_LD_PATH']],paste(installed.packages()["rJava","LibPath"],"rJava","jri",sep=.Platform$file.sep),sep=.Platform$path.sep)
+  sl[['JAVA_LD_PATH']] <- paste(sl[['JAVA_LD_PATH']],system.file("jri",package="rJava"),sep=.Platform$path.sep)
 
-  sl[['JGR_JAR']] <- paste(.jgr.pkg.path,"cont","JGR.jar",sep=.Platform$file.sep)
-  sl[['JRI_JAR']] <- paste(installed.packages()["rJava","LibPath"],"rJava","jri","JRI.jar",sep=.Platform$file.sep)
-  sl[['IPLOTS_JAR']] <- paste(installed.packages()["iplots","LibPath"],"iplots","cont","iplots.jar",sep=.Platform$file.sep)
-
+  sl[['JGR_JAR']] <- system.file("java","JGR.jar",package="JGR")
+  sl[['JRI_JAR']] <- system.file("jri","JRI.jar",package="rJava")
+  sl[['IPLOTS_JAR']] <- system.file("java","iplots.jar",package="iplots")
+  sl[['RJAVA']] <- system.file(package='rJava')
   ## do all the substitutions
   for (i in names(sl))
     rt <- gsub(paste('@',i,'@',sep=''), sl[[i]], rt)
@@ -403,7 +386,7 @@ JGR <- function(update=FALSE)
       return(invisible(FALSE))
     }
 
-    runs <- paste(.jgr.pkg.path, "cont", "run", sep=.Platform$file.sep)
+    runs <- paste(.jgr.pkg.path, "scripts", "run", sep=.Platform$file.sep)
     if (file.exists(runs)) {
       cat("Starting JGR ...\n(You can use",runs,"to start JGR directly)\n")
       system(paste("sh ",runs,"&"))
@@ -416,11 +399,13 @@ JGR <- function(update=FALSE)
         wl <- try(writeLines(rs, fn),silent=TRUE)
         if (inherits(wl,"try-error"))
           stop("Cannot create JGR start script. Please run JGR() as root to create a start script ",runs)
+        system(paste("chmod a+x '",fn,"'",sep=''))
         cat("Starting JGR ...\n")
         system(paste("sh ",fn,"&"))
         unlink(fn)
       } else {
         cat("Starting JGR run script. This can be done from the shell as well, just run\n",runs,"\n\n")
+        system(paste("chmod a+x '",runs,"'",sep=''))
         system(paste("sh ",runs,"&"))
       }
     }

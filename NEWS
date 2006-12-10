@@ -1,5 +1,24 @@
 Changle Log
 
+1.5-2   (2007-08-22)
+    o   print support for editor (b&w)
+
+    o	fix run script for rJava 0.5
+
+    o	make run script executable by default
+
+1.5-1   (2007-08-05)
+    o   java backend changes
+
+    o   new Editor based on JEDIT
+
+    o   JGR is running on Windows Vista
+
+1.4-17	(2007-05-29)
+    o	adapt to JRI API 1.8 change
+
+    o	make mkdist more portable (now works on Windows)
+
 1.4-16	(2007-04-24)
     o	adapt to Sys.putenv change in R 2.5.0
 

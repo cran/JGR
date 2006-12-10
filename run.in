@@ -39,7 +39,7 @@ if test -r "${HOME}/.JGRprefsrc"; then
         R_DEFAULT_PACKAGES="${packages}"
     fi
 else
-    R_DEFAULT_PACKAGES="utils, stats, rJava, methods, JGR, JavaGD, graphics, datasets"
+    R_DEFAULT_PACKAGES="utils, stats, rJava, methods, JGR, JavaGD, grDevices, graphics, datasets"
 fi
 
 NO_SIG=1
@@ -51,4 +51,4 @@ export LD_LIBRARY_PATH
 LC_NUMERIC=C
 export LC_NUMERIC
 
-"${JAVA}" -Djava.library.path=".:${LD_LIBRARY_PATH}" -classpath "@JRI_JAR@:@IPLOTS_JAR@:@JGR_JAR@" org.rosuda.JGR.JGR $*
+"${JAVA}" -Djava.library.path=".:${LD_LIBRARY_PATH}" -classpath "@RJAVA@/java/boot" -Drjava.path="@RJAVA@" -Drjava.class.path="@JRI_JAR@:@IPLOTS_JAR@:@JGR_JAR@" -Dmain.class=org.rosuda.JGR.JGR RJavaClassLoader $*
