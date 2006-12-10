@@ -1,0 +1,15 @@
+Changle Log
+
+1.4-16	(2007-04-24)
+    o	adapt to Sys.putenv change in R 2.5.0
+
+    o	prevent Java from setting LC_NUMERIC to a non-C default
+	which will break R (thanks to Frederik Elwert for testing)
+
+    o	fix incompatibilities of some shells in the run script
+	(thanks to Frederik Elwert for a crucial hint) 
+
+    o	fix SVN properties on some files
+
+    o	add NEWS
+

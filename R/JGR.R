@@ -1,11 +1,11 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.4-15
+# Package version: 1.4-16
 #
-# $Id: JGR.R 91 2006-12-27 18:27:36Z helbig $
+# $Id: JGR.R 94 2007-04-24 20:48:43Z urbanek $
 # (C)Copyright 2004-2006 Markus Helbig
-#
-#
+# (C)Copyright 2004,2006,2007 Simon Urbanek
+# Licensed under GPL v2
 
 #==========================================================================
 # initialization
@@ -23,7 +23,8 @@ library(utils)
   #assign(".jgr.env", new.env(), .je)
   
   ## we supply our own JavaGD class
-  Sys.putenv("JAVAGD_CLASS_NAME"="org/rosuda/JGR/toolkit/JavaGD")
+  .setenv <- if (exists("Sys.setenv")) Sys.setenv else Sys.putenv
+  .setenv("JAVAGD_CLASS_NAME"="org/rosuda/JGR/toolkit/JavaGD")
 
   ## now load rJava for callbacks
   ## strictly speaking we should not need to add JGR, because
@@ -388,7 +389,7 @@ JGR <- function(update=FALSE)
         lt <- .libPaths()[1]
       cran <- getOption("repos")
       if (cran == "@CRAN@") cran <- "http://cran.r-project.org/"
-      return (install.packages(c("JGR","rJava","JavaGD","iplots"), lt, c(cran,"http://www.rosuda.org/")))
+      return (install.packages(c("JGR","rJava","JavaGD","iplots"), lt, c(cran,"http://www.rforge.net/")))
     }
     
     # FIXME: we should invoke a start script ...
