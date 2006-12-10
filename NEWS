@@ -1,4 +1,7 @@
 Change Log
+1.5-10 (2008-03-23)
+    o   fixed about/rhelp in editor
+    o   added increase/decrease menuitems to Editor
 
 1.5-9  (2008-03-21)
     o   editor: fixed overprinting linenumbers
