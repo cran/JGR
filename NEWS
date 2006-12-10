@@ -1,4 +1,8 @@
-Changle Log
+Change Log
+
+1.5-9  (2008-03-21)
+    o   editor: fixed overprinting linenumbers
+    o   added editor font managment to JGR preferences
 
 1.5-8   (2007-12-08)
     o   fixed coloring in editor
