@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.4-13
+# Package version: 1.4-14
 #
-# $Id: JGR.R 86 2006-10-22 12:13:21Z helbigm $
+# $Id: JGR.R 88 2006-12-08 14:40:08Z helbig $
 # (C)Copyright 2004-2006 Markus Helbig
 #
 
@@ -78,10 +78,10 @@ package.manager <- function() {
 }
 
 installPackages <-
-function (contriburl = NULL, type = "binaries") 
+function (contriburl = NULL, type = getOption("pkgType")) 
 {
   if (!.jgr.works) { cat("installPackages() cannot be used outside JGR.\n"); return(invisible(NULL)) }
-    if (type == "binaries" && Sys.info()[["sysname"]] == "Darwin") {
+    if (type == "mac.binary") {
         if (R.version$major >= 2 && R.version$minor >= 2) 
             a <- available.packages(contriburl = contrib.url(getOption("repos"), 
                 type = "mac.binary"))

@@ -20,7 +20,7 @@
 }
 \usage{
 JGR(update = FALSE)
-installPackages(contriburl = NULL, type = "binaries")
+installPackages(contriburl = NULL, type = getOption("pkgType"))
 jgr.pager(file, header, title, delete.file)
 jgr.set.options(..., useJavaGD = TRUE, useJGRpager = TRUE)
 object.browser()
@@ -30,8 +30,7 @@ package.manager()
   \item{update}{If set to \code{TRUE} then JGR is updated for the RoSuDa
     repository (internet connection is required).}
   \item{contriburl}{same as in \code{\link{install.packages}}}
-  \item{type}{package type, must be either \code{"sources"} or
-    \code{"binaries"}}
+  \item{type}{JGR uses the package type set in the R options}
   \item{file}{file to show}
   \item{header}{header for each file}
   \item{title}{overall title for the display}
