@@ -51,4 +51,4 @@ export LD_LIBRARY_PATH
 LC_NUMERIC=C
 export LC_NUMERIC
 
-"${JAVA}" -Djava.library.path=".:${LD_LIBRARY_PATH}" -classpath "@RJAVA@/java/boot" -Drjava.path="@RJAVA@" -Drjava.class.path="@JRI_JAR@:@IPLOTS_JAR@:@JGR_JAR@" -Dmain.class=org.rosuda.JGR.JGR RJavaClassLoader $*
+"${JAVA}" -Xmx512m -Djava.library.path=".:${LD_LIBRARY_PATH}" -classpath "@RJAVA@/java/boot" -Drjava.path="@RJAVA@" -Drjava.class.path="@JRI_JAR@:@IPLOTS_JAR@:@JGR_JAR@" -Dmain.class=org.rosuda.JGR.JGR RJavaClassLoader $*
