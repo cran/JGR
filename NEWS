@@ -1,5 +1,10 @@
 Changle Log
 
+1.5-8   (2007-12-08)
+    o   fixed coloring in editor
+    o   fixed Code completion in editor
+    o   disabled "Help Agent" in editor for now (has to be newly developed)
+
 1.5-7   (2007-11-15)
     o   fixed shortcuts for Windows
 
