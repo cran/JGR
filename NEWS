@@ -1,5 +1,10 @@
 Changle Log
 
+1.5-6   (2007-10-19)
+    o   setwd on Windows Vista
+    o   don't show ~ in Editor
+    o   allow to use META+ENTER for executing R commands in editor
+
 1.5-5	(2007-09-04)
     o	raise Java stack limit to 512MB (in the run script)
     o   fixed "Load DataFile dialog" for Windows (Sun fixed a bug in Java)

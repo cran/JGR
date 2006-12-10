@@ -1,0 +1,6 @@
+/* Localized versions of Info.plist keys */
+
+CFBundleName = "JGR";
+CFBundleShortVersionString = "1.5";
+CFBundleGetInfoString = "JGR version 1.5, Copyright 2007 RoSuDa, Univ. Augsburg.";
+NSHumanReadableCopyright = "Copyright 2007 RoSuDA, Univ. Augsburg";

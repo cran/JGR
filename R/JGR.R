@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.5-5
+# Package version: 1.5-6
 #
-# $Id: JGR.R 119 2007-09-01 16:46:17Z helbig $
+# $Id: JGR.R 125 2007-10-22 13:56:52Z urbanek $
 # (C)Copyright 2004,2005,2006,2007 Markus Helbig
 # (C)Copyright 2004,2006,2007 Simon Urbanek
 # Licensed under GPL v2
@@ -402,6 +402,7 @@ JGR <- function(update=FALSE)
         system(paste("chmod a+x '",fn,"'",sep=''))
         cat("Starting JGR ...\n")
         system(paste("sh ",fn,"&"))
+        system("sh -c 'sleep 3'") # give the shell some time to read the script
         unlink(fn)
       } else {
         cat("Starting JGR run script. This can be done from the shell as well, just run\n",runs,"\n\n")
