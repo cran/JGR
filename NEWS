@@ -1,5 +1,8 @@
 Changle Log
 
+1.5-7   (2007-11-15)
+    o   fixed shortcuts for Windows
+
 1.5-6   (2007-10-19)
     o   setwd on Windows Vista
     o   don't show ~ in Editor
