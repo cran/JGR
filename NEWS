@@ -1,4 +1,15 @@
 Change Log
+1.7-2   (2010-09-24)
+    o   removed some deprecated functions
+    o   redirect Java stdout to JGR console
+    o   Fixed MacOS JavaGD resize deadlock bug
+    o   Added JavaGD save support for png, jpeg, bmp, and tiff
+    o   Added ability to insert new menus, menu items, separators, 
+        and sub-menus. Menus and menu items can be removed.
+    o   Fixed 100% CPU on start-up bug
+    o   Cancel button fixed on unix systems 
+    o   use rJava 0.8-6
+    
 1.7-1   (2010-03-27)
     o   use rJava 0.8-3
 
@@ -30,7 +41,7 @@ Change Log
     o   reactivated possibility to set dataset name when loading a datafile
     o   Fixed "Open Recent" in Editor
     o   Fixed "Clear Console" command
-    o   Restructered menu to be consistent with RGui
+    o   Restructured menu to be consistent with RGui
     o   ObjectManager, PackageManager, PackageInstaller as singleton
     o   Editor, Datatable with automatic placement
 

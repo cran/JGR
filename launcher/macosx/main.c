@@ -9,11 +9,13 @@
 #include "javacf.h"
 
 /* JGR Loader version should always parse to a real number */
-#define JGR_LOADER_VERSION "1.61"
+#define JGR_LOADER_VERSION "1.7"
 /* Loader generation can be requested in the DESCRIPTION of the JGR package */
 #define JGR_LOADER_GENERATION 2
 
 /* ChangeLog
+   1.7   - added -Xrs, allow x86_64 arch builds, set LANG=en_US.UTF-8 to makes sure we're in UTF-8 locale
+           (or to RLocale if set in the preferences)
    1.61  - SET_DEFAULT_PACKAGES (default unset) determines whether R_DEFAULT_PACKAGES will be set
            or not. To notify JGR jgr.load.pkgs property is set to "yes" if it's JGR's responsibility
            to load packages (default) or "no" if the loader loaded them using R_DEFAULT_PACKAGES.
@@ -27,8 +29,8 @@
 #define arch_str "/ppc"
 #elif defined __i386__
 #define arch_str "/i386"
-//#elif defined __x86_64__
-//#define arch_str "/x86_64"
+#elif defined __x86_64__
+#define arch_str "/x86_64"
 #elif defined __ppc64__
 #define arch_str "/ppc64"
 #elif defined __arm__
@@ -110,7 +112,7 @@ static char buf[8192], tbuf[1024], jrilib[2048], npkg[512];
 static int debugLevel=0;
 static struct stat sts;
 
-#define userArgs 24
+#define userArgs 25
 
 int main(int argc, char* argv[])
 {
@@ -208,6 +210,10 @@ int main(int argc, char* argv[])
 		if (!strcmp(key,"InitialRHome") && val) {
 			printf("from prefs: R_HOME=\"%s\"\n", val);
 			rhomerequest=val;
+		}
+		if (!strcmp(key,"RLocale") && val) {
+			printf("from prefs: LANG=\"%s\"\n", val);
+			setenv("LANG", val, 1);
 		}
 		if (!strcmp(key,"DebugLevel") && val && *val) {
 			debugLevel=atoi(val);
@@ -426,6 +432,10 @@ chkJGRpkg:
 #endif
 	printf("R_ARCH=%s\n", getenv("R_ARCH"));
 	
+	if (!getenv("LANG")) { /* set LANG to UTF-8 locale */
+		setenv("LANG", "en_US.UTF-8", 1);
+	}
+	
 	strcpy(tbuf,libroot);
 	strcat(tbuf,"JGR/java/JGR.jar");
 
@@ -457,6 +467,7 @@ chkJGRpkg:
 		/* strcpy(tbuf,"-Djava.library.path="); strcat(tbuf, getenv("DYLD_LIBRARY_PATH")); jargv[argb--]=tbuf; */
 		jargv[argb--]=buf;
 		jargv[argb--]=xmx;
+		jargv[argb--]="-Xrs"; /* disable signal handling in Java so Sun doesn't kill R */
 		jargv[argb--]=bootpath;
 		jargv[argb--]="-cp";
 		/* final: program name */

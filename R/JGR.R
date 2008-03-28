@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.7-1
+# Package version: 1.7-2
 #
-# $Id: JGR.R 247 2009-11-03 21:28:47Z helbig $
+# $Id: JGR.R 268 2010-09-12 08:11:01Z ifellows $
 # (C)Copyright 2004-2009 Markus Helbig
 # (C)Copyright 2009 Ian Fellows
 # (C)Copyright 2004,2006,2007 Simon Urbanek
@@ -87,18 +87,18 @@ installPackages <- function (contriburl = NULL, type = getOption("pkgType"))
             a <- available.packages(contriburl = contrib.url(getOption("repos"), 
 															 type = "mac.binary"))
 				else if (R.version$major >= 2 && R.version$minor >= 1) 
-					a <- CRAN.packages(contriburl = contrib.url(getOption("repos"), 
+					a <- available.packages(contriburl = contrib.url(getOption("repos"), 
 																type = "mac.binary"))
-						else a <- CRAN.packages(contriburl = contrib.url(getOption("CRAN"), 
+						else a <- available.packages(contriburl = contrib.url(getOption("CRAN"), 
 																		 type = "mac.binary"))
     }
 		else if (!is.null(contriburl)) 
 			if (R.version$major >= 2 && R.version$minor >= 2) 
 				a <- available.packages(contriburl = contriburl)
-			else a <- CRAN.packages(contriburl = contriburl)
+			else a <- available.packages(contriburl = contriburl)
 		else if (R.version$major >= 2 && R.version$minor >= 2) 
 			a <- available.packages()
-		else a <- CRAN.packages()
+		else a <- available.packages()
 		pkgs <- a[, 1]
 		if (length(pkgs) > 0) {
 			invisible( .jcall("org/rosuda/JGR/JGRPackageInstaller",,"instAndDisplay",pkgs, 
@@ -146,16 +146,67 @@ jgr.addMenu <- function(name) {
 	invisible(.jcall("org/rosuda/JGR/JGR","V","addMenu",as.character(name)))
 }
 
-jgr.addMenuItem <- function(menu, name, command) {
+jgr.insertMenu <- function(name, index) {
+	if (!.jgr.works) { cat("jgr.insertMenu() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	invisible(.jcall("org/rosuda/JGR/JGR","V","insertMenu",as.character(name),as.integer(index-1)))
+}
+
+jgr.addMenuItem <- function(menu, name, command,silent=TRUE) {
   if (!.jgr.works) { cat("jgr.addMenuItem() cannot be used outside JGR.\n"); return(invisible(NULL)) }
   if (is.function(command))
     command <- .jgr.register.function(command)
-  invisible(.jcall("org/rosuda/JGR/JGR","V","addMenuItem",as.character(menu),as.character(name),as.character(command)))
+  invisible(.jcall("org/rosuda/JGR/JGR","V","addMenuItem",as.character(menu),
+				  as.character(name),as.character(command),as.logical(silent)))
+}
+
+jgr.insertMenuItem <- function(menu, name, command, index,silent=TRUE) {
+	if (!.jgr.works) { cat("jgr.insertMenuItem() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	if (is.function(command))
+		command <- .jgr.register.function(command)
+	invisible(.jcall("org/rosuda/JGR/JGR","V","insertMenuItem",as.character(menu),
+					as.character(name),as.character(command),as.logical(silent),as.integer(index-1)))
+}
+
+jgr.addSubMenu <- function(menu, subMenuName, labels, commands) {
+	if (!.jgr.works) { cat("jgr.addSubMenu() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	
+	invisible(J("org/rosuda/JGR/JGR")$addSubMenu(menu,subMenuName,labels,commands))
+}
+
+jgr.insertSubMenu <- function(menu, subMenuName, labels, commands,index) {
+	if (!.jgr.works) { cat("jgr.addSubMenu() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	
+	invisible(J("org/rosuda/JGR/JGR")$addSubMenu(menu,subMenuName,as.integer(index-1),labels,commands))
 }
 
 jgr.addMenuSeparator <- function(menu) {
   if (!.jgr.works) { cat("jgr.addMenuSeparator() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	invisible(.jcall("org/rosuda/JGR/JGR","V","addMenuSeparator",as.character(menu)))
+}
+
+jgr.insertMenuSeparator <- function(menu,index) {
+	if (!.jgr.works) { cat("jgr.insertMenuSeparator() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	invisible(.jcall("org/rosuda/JGR/JGR","V","insertMenuSeparator",as.character(menu),as.integer(index-1)))
+}
+
+jgr.getMenuNames <- function() {
+	if (!.jgr.works) { cat("jgr.getMenuNames() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	J("org/rosuda/JGR/JGR")$getMenuNames()
+}
+
+jgr.getMenuItemNames <- function(menu) {
+	if (!.jgr.works) { cat("jgr.getMenuItemNames() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	J("org/rosuda/JGR/JGR")$getMenuItemNames(as.character(menu))
+}
+
+jgr.removeMenu <- function(index) {
+	if (!.jgr.works) { cat("jgr.removeMenu() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	J("org/rosuda/JGR/JGR")$removeMenu(as.integer(index-1))
+}
+
+jgr.removeMenuItem <- function(menu,index) {
+	if (!.jgr.works) { cat("jgr.removeMenuItem() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+	J("org/rosuda/JGR/JGR")$removeMenuItem(as.character(menu), as.integer(index-1))
 }
 
 # creates a 'command' based on a function by calling the function without arguments
@@ -252,7 +303,7 @@ print.hsearch <- function(x, ...) {
     if (length(objects) > 0) for (i in 1:length(objects)) {
     	model <- get(objects[i])
         cls <- class(model)
-        if (cls[1] == "lm" || cls[1] == "glm") result <- c(result,c(objects[i],cls[1]))
+        if ( "lm" %in% cls || "glm" %in% cls) result <- c(result,c(objects[i],cls[1]))
     }
     result
 }
@@ -261,8 +312,8 @@ print.hsearch <- function(x, ...) {
     objects <- ls(pos=1)
     result <- c();
     if (length(objects) > 0) for (i in 1:length(objects)) {
-    	cls <- class(get(objects[i]))[1]
-        if (cls == "function") result <- c(result,objects[i])
+    	cls <- class(get(objects[i]))
+        if ("function" %in% cls) result <- c(result,objects[i])
     }
     result
 }
@@ -272,8 +323,9 @@ print.hsearch <- function(x, ...) {
     result <- c();
     if (length(objects) > 0) for (i in 1:length(objects)) {
     	d <- get(objects[i])
-    	cls <- class(d)[1]
-        if (cls == "data.frame" || cls == "table") result <- c(result,objects[i],cls)
+    	cls <- class(d)
+        if ("data.frame" %in% cls || "table" %in% cls) 
+        	result <- c(result,objects[i],cls[1])
     }
     result
 }
@@ -283,8 +335,9 @@ print.hsearch <- function(x, ...) {
     result <- c();
     if (length(objects) > 0) for (i in 1:length(objects)) {
     	if (objects[i] != "last.warning" && objects[i] != "*tmp*") {
-	    	cls <- class(get(objects[i]))[1]
-   			if (cls != "data.frame" && cls != "table" && cls != "function") result <- c(result,objects[i],cls)
+	    	cls <- class(get(objects[i]))
+   			if (!("data.frame" %in% cls || "table" %in% cls || "function" %in% cls)) 
+   				result <- c(result,objects[i],cls[1])
         }
     }
     result
@@ -293,16 +346,16 @@ print.hsearch <- function(x, ...) {
 .getContent <- function (o, p = NULL)
 {
     result <- c()
-    if (class(o) == "table")
+    if ("table" %in% class(o))
         o <- dimnames(o)
-    if (class(p) == "table") {
+    if ("table" %in% class(p)) {
         dn <- o
         for (i in 1:length(dn)) {
             try(result <- c(result, dn[i], class((dn[[i]]))[1]),
                 silent = TRUE)
         }
     }
-    else if (class(o) == "matrix") {
+    else if ("matrix" %in% class(o)) {
     	colnames <- colnames(o)
     	for (i in 1:dim(o)[2]) {
     		xname <- colnames[i]

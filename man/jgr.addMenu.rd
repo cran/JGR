@@ -1,5 +1,6 @@
 \name{jgr.addMenu}
 \alias{jgr.addMenu}
+\alias{jgr.insertMenu}
 \title{
   New JGR Console Menu
 }
@@ -8,9 +9,11 @@
 }
 \usage{
 jgr.addMenu(name)
+jgr.insertMenu(name, index)
 }
 \arguments{
   \item{name}{Menu name}
+  \item{index}{index at which to insert}
 }
 \value{
   Menu
@@ -24,5 +27,13 @@ jgr.addMenu("Workspace")
 jgr.addMenuItem("Workspace","Browse","ls()")
 jgr.addMenuSeparator("Workspace")
 jgr.addMenuItem("Workspace","Browse (pos=2)","ls(pos=2)")
+
+
+menus <- jgr.getMenuNames()
+index <- which(menus=="Packages & Data")
+if(length(index)==0) index <- 1
+
+jgr.insertMenu("User menu",index)
+jgr.addMenuItem("User menu","A good place for user generated menus is","print('before Packages & Data')")
 }
 \keyword{programming}

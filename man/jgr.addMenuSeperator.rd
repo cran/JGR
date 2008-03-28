@@ -1,5 +1,6 @@
 \name{jgr.addMenuSeparator}
 \alias{jgr.addMenuSeparator}
+\alias{jgr.insertMenuSeparator}
 \title{
   New JGR Console MenuSeparator
 }
@@ -8,9 +9,11 @@
 }
 \usage{
 jgr.addMenuSeparator(menu)
+jgr.insertMenuSeparator(menu,index)
 }
 \arguments{
   \item{menu}{name of the menu to add this separator to}
+  \item{index}{index at which to insert}
 }
 \value{
   Menu
