@@ -1,11 +1,11 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.7-15
+# Package version: 1.7-16
 #
-# $Id: JGR.R 350 2013-05-10 14:30:21Z helbig $
-# (C)Copyright 2004-2011,2013 Markus Helbig
-# (C)Copyright 2009,2012 Ian Fellows
-# (C)Copyright 2004,2006,2007,2012 Simon Urbanek
+# $Id: JGR.R 364 2013-12-21 08:37:46Z helbig $
+# (C)Copyright 2004-2013 Markus Helbig
+# (C)Copyright 2009-2013 Ian Fellows
+# (C)Copyright 2004,2006,2007,2012,2013 Simon Urbanek
 # Licensed under GPL v2
 
 #==========================================================================
@@ -69,9 +69,7 @@ broken.gomp <- function() {
 	
 	# set RHome Path in JGR
 	invisible(.jcall("org/rosuda/JGR/JGR", "V", "setRHome", as.character(R.home())))
-	
-	invisible(.jcall("org/rosuda/JGR/JGR", "V", "setRLibs", as.character(.libPaths())))
-	
+		
 	invisible(.jcall("org/rosuda/JGR/JGR", "V", "setKeyWords", 
 		as.character(.refreshKeyWords())))
 	
@@ -85,7 +83,7 @@ broken.gomp <- function() {
 
 .onAttach <- function(libname, pkgname) {
 	if (!isTRUE(.jgr.works))
-		packageStartupMessage("\nPlease type JGR() to download/launch console. Launchers can also be obtained at http://www.rforge.net/JGR/files/.\n\n")
+		packageStartupMessage("\nPlease type JGR() to launch console. Platform specific launchers (.exe and .app) can also be obtained at http://www.rforge.net/JGR/files/.\n\n")
 
 	rv <- as.numeric(paste(R.version$major, as.integer(R.version$minor), sep = "."))
 	if (rv == 2.13 && broken.gomp()) 
@@ -165,7 +163,6 @@ jgr.set.options <- function(..., useJavaGD = TRUE,
 		return(invisible(NULL))
 	}
 	if (useJavaGD) {
-		require(JavaGD)
 		options(device = "JavaGD")
 	}
 	if (useJGRpager) {
@@ -176,7 +173,7 @@ jgr.set.options <- function(..., useJavaGD = TRUE,
 	}
 	if (useHTMLHelp) {
 		options(help_type = "html")
-		tools:::startDynamicHelp()
+		eval(parse(text="tools:::startDynamicHelp()"))
 	}
 }
 
@@ -242,7 +239,7 @@ jgr.insertSubMenu <- function(menu, subMenuName, labels,
 		return(invisible(NULL))
 	}
 	
-	invisible(J("org/rosuda/JGR/JGR")$addSubMenu(menu, subMenuName, 
+	invisible(J("org/rosuda/JGR/JGR")$insertSubMenu(menu, subMenuName, 
 		as.integer(index - 1), labels, commands))
 }
 
@@ -308,7 +305,8 @@ jgr.removeMenuItem <- function(menu, index) {
 
 
 print.hsearch <- function(x, ...) {
-	if (tools:::httpdPort > 0L) {
+	httpdPort <- eval(parse(text="tools:::httpdPort"))
+	if (httpdPort > 0L) {
 		path <- file.path(tempdir(), ".R/doc/html")
 		dir.create(path, recursive = TRUE, showWarnings = FALSE)
 		out <- paste("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n", 
@@ -321,7 +319,7 @@ print.hsearch <- function(x, ...) {
 		
 		result <- x$matches
 		for (i in 1:dim(result)[1]) {
-			links <- paste("<a href=\"http://127.0.0.1:", tools:::httpdPort, 
+			links <- paste("<a href=\"http://127.0.0.1:", httpdPort, 
 				"/library/", result[i, 3], "/help/", result[i, 
 				1], "\">", result[i, 1], "</a>", sep = "")
 			out <- c(out, paste("<tr align=\"left\" valign=\"top\">\n", 
@@ -332,7 +330,7 @@ print.hsearch <- function(x, ...) {
 		out
 		writeLines(out, file.path(path, paste(x$pattern, ".html", 
 			sep = "")))
-		browseURL(paste("http://127.0.0.1:", tools:::httpdPort, 
+		browseURL(paste("http://127.0.0.1:", httpdPort, 
 			"/doc/html/", x$pattern, ".html", sep = ""))
 	}
 }
@@ -369,7 +367,6 @@ print.hsearch <- function(x, ...) {
 		cat(".refresh() cannot be used outside JGR.\n")
 		return(invisible(NULL))
 	}
-	invisible(.jcall("org/rosuda/JGR/JGR", "V", "setRLibs", as.character(.libPaths())))
 	invisible(.jcall("org/rosuda/JGR/JGR", "V", "setKeyWords", 
 		as.character(.refreshKeyWords())))
 	invisible(.jcall("org/rosuda/JGR/JGR", "V", "setObjects", 
@@ -493,10 +490,11 @@ print.hsearch <- function(x, ...) {
 		if (is.null(file)) 
 			return(FALSE)
 	}
+	copyGD = eval(parse(text="JavaGD:::.javaGD.copy.device"))
 	if (usefile) 
-		JavaGD:::.javaGD.copy.device(source, useDevice, file = file, 
+		copyGD(source, useDevice, file = file, 
 			...)
-	else JavaGD:::.javaGD.copy.device(source, useDevice, ...)
+	else copyGD(source, useDevice, ...)
 	invisible(NULL)
 }
 
@@ -572,51 +570,7 @@ JGR <- function(update = FALSE) {
 			lt, c(cran, "http://www.rforge.net/")))
 	}
 	
-	if (.Platform$OS.type == "windows") {
-		.generate.windows.script()
-		cat("Starting JGR ...\n\n")
-		system("open jgrLaunch.bat")
-		return(invisible(TRUE))
-	}
-	
-	if (length(grep("darwin", R.version$os)) > 0) {
-		
-		cat("Starting JGR ...\n\n")
-		.generate.mac.script()
-		system("open -a Terminal.app jgrLaunch")
-		system("open .")
-		return(invisible(TRUE))
-	}
-	
-	runs <- paste(.jgr.pkg.path, "scripts", "run", sep = .Platform$file.sep)
-	if (file.exists(runs)) {
-		cat("Starting JGR ...\n(You can use", runs, "to start JGR directly)\n")
-		system(paste("sh ", runs, "&"))
-	}
-	else {
-		rs <- .generate.run.script()
-		wl <- try(writeLines(rs, runs), silent = TRUE)
-		if (inherits(wl, "try-error")) {
-			cat("Please consider running JGR() as root to create a start script in", 
-				runs, "automatically.\n")
-			fn <- tempfile("jgrs")
-			wl <- try(writeLines(rs, fn), silent = TRUE)
-			if (inherits(wl, "try-error")) 
-				stop("Cannot create JGR start script. Please run JGR() as root to create a start script ", 
-				runs)
-			system(paste("chmod a+x '", fn, "'", sep = ""))
-			cat("Starting JGR ...\n")
-			system(paste("sh ", fn, "&"))
-			system("sh -c 'sleep 3'")
-			unlink(fn)
-		}
-		else {
-			cat("Starting JGR run script. This can be done from the shell as well, just run\n", 
-				runs, "\n\n")
-			system(paste("chmod a+x '", runs, "'", sep = ""))
-			system(paste("sh ", runs, "&"))
-		}
-	}
+	cat(launchJGR(popMsgs=FALSE))
 }
 
 .generate.mac.script <- function(launcher_loc = NULL, 
@@ -792,4 +746,199 @@ reformat.code <- function(txt) {
 	return(paste(tidied, collapse = "\n"))
 }
 
+
+launchJGR <- function(javaArgs=NULL,jgrArgs="",popMsgs=TRUE){
+	if(!exists("paste0"))
+		paste0 <- function(...) paste(...,sep="")
+	windows <- .Platform$OS.type == "windows"
+	mac <- Sys.info()[1]=="Darwin"
+	if(is.null(javaArgs)){
+		if(windows)
+			javaArgs <- "-Xss3m"
+		else if(mac)
+			javaArgs <- "-Xss5m"
+		else
+			javaArgs <- ""
+	}
+
+	ws <- function(s) if (windows) gsub("/","\\",s, fixed=TRUE) else s
+	ps <- .Platform$path.sep
+	msg <- function(s){
+		if(!popMsgs)
+			return(s)
+		if(windows){
+			system(paste('msg *',s))
+			return(s)
+		}else if(mac){
+			system(paste0('osascript -e \'tell app "Finder" to display dialog "',s,'"\''))
+			return(s)
+		}
+		if(eval(parse(text="require(tcltk)"))){
+			eval(parse(text="tcltk::tkmessageBox"))(message=s)
+			return(s)
+		}else{
+			rJava::J("javax.swing.JOptionPane")$showMessageDialog(rJava::.jnull(),s)
+			return(s)
+		}
+	}
+	checkPath <- function(path,message){
+		if(missing(message)){
+			message <- paste(path,"is not a valid directory or file.",collapse="\n")
+		}
+		if(!all(file.exists(path)))
+			warning(msg(message))
+		path
+	}
+	sets <- ""
+	set <- function(var,value){
+		if(!windows){
+			sets <<- paste0(sets,"\nexport ",var,"=\"",value,"\"")
+		}else{
+			sets <<- paste0(sets,"\nSET \"",var,"=",value,"\"")
+		}
+		t <- list(value)
+		names(t) <- var
+		do.call(Sys.setenv,t)
+	}
+	trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+	rhome <- R.home()
+	libs  <- paste(.libPaths(), collapse=ps)
+	libUser <- Sys.getenv("R_LIBS_USER")
+	arch <- if (nzchar(Sys.getenv("R_ARCH"))) Sys.getenv("R_ARCH") else .Platform$r_arch
+
+	## NOTE: path.package des NOT work since it requires packages on search path!
+	rJavaPath <- system.file(package="rJava")
+	jriJarPath <- checkPath(system.file("jri", "JRI.jar", package="rJava"))
+	if(!file.exists(jriJarPath))
+		stop(msg("JRI is required but missing! Make sure R was configured with --enable-R-shlib and rJava was compiled with JRI support."))
+	jgrJarPath <- checkPath(system.file("java", "JGR.jar", package="JGR"))
+	iplotsJarPath <- checkPath(system.file("java", "iplots.jar", package="iplots"))
+	boot <- checkPath(system.file("java","boot", package="rJava"))
+
+	gsp <- function (property) .jcall("java/lang/System", "S", "getProperty", property)
+	javaHome <- gsp("java.home")
+	java <- file.path(javaHome,"bin", if (windows) "java.exe" else "java")
+	if(!file.exists(java)){
+		# JAVA_HOME/bin is not guaranteed to exist
+		# it typically exists for JDK but may not for installations with detached JRE
+		# fall back to first java on path
+		java <- "java"
+		je <- system("java -version")
+		if(je==127)
+			msg("JAVA_HOME/bin does not exist, and java was not found on the path")
+	}
+        
+	path <- gsp("java.library.path")
+	
+	cp <- shQuote(paste(ws(c(jriJarPath, iplotsJarPath, jgrJarPath,
+                                 file.path(rhome, "etc", "classes"),
+                                 file.path(rhome, "etc", "classes", "classes.jar"))), collapse=ps))
+	
+	#dyld <- system.file("jri", "libjri.jnilib", package="rJava")
+	#if (!nzchar(dyld)) dyld <- system.file("jri", "libjri.so", package="rJava")
+
+	if(windows){
+		bit64 <- .Machine$sizeof.pointer==8
+		dllFound <- FALSE
+		if(bit64){
+			jriDllPath <- system.file("jri", "x64", package="rJava")
+			loc <- system.file("jri", "x64","jri.dll", package="rJava")
+			if(nzchar(loc)){
+				arch <- "/x64"
+				path <- paste0(jriDllPath, ps, path)
+				dllFound <- TRUE
+			}
+		}else{
+			jriDllPath <- system.file("jri", "i386", package="rJava")
+			loc <- system.file("jri", "i386","jri.dll", package="rJava")
+			if(file.exists(loc)){
+				arch <- "/i386"
+				path <- paste0(jriDllPath, ps, path)
+				dllFound <- TRUE
+			}			
+		}
+		if(!dllFound){
+			jriDllPath <- system.file("jri", package="rJava")
+			loc <- system.file("jri","jri.dll", package="rJava")
+			path <- paste0(jriDllPath, ps, path)
+		}
+		if(!nzchar(loc)){
+			msg("jri.dll not found. Please reinstall rJava.")
+		}
+		path <- paste0(path, ps, rhome, "/bin")
+		set("PATH", ws(path))
+	}
+	set("R_HOME", rhome)
+	if(!windows && !nzchar(Sys.getenv("R_DOC_DIR")))
+		set("R_DOC_DIR", file.path(rhome, "doc"))
+	if(!windows && !nzchar(Sys.getenv("R_SHARE_DIR")))
+		set("R_SHARE_DIR", file.path(rhome, "share"))
+	if(!windows && !nzchar(Sys.getenv("R_INCLUDE_DIR")))
+		set("R_INCLUDE_DIR", file.path(rhome, "include"))
+	set("R_ARCH", arch)
+	set("R_LIBS", libs)
+	set("R_LIBS_USER", libUser)
+	Sys.unsetenv("NOAWT")
+	if(!windows){
+		if(!nzchar(Sys.getenv("LANG"))) {
+			lc <- Sys.getlocale("LC_COLLATE")
+			set("LANG", if(nzchar(lc)) lc else "en_US.UTF-8")
+		}
+        ## FIXME: this is bad! ... Why should we set this?
+		#if(!nzchar(Sys.getenv("DYLD_LIBRARY_PATH")))
+		#	set("DYLD_LIBRARY_PATH", checkPath(dyld))
+		
+		if(!mac){
+			ld <- NULL
+			if(nzchar(Sys.getenv("JAVA_LD_PATH")))
+				ld <- Sys.getenv("JAVA_LD_PATH")
+			else if(nzchar(Sys.getenv("R_JAVA_LD_LIBRARY_PATH")))
+				ld <- Sys.getenv("R_JAVA_LD_LIBRARY_PATH")
+			else if(nzchar(Sys.getenv("LD_LIBRARY_PATH")))
+				ld <- Sys.getenv("LD_LIBRARY_PATH")
+			if(!is.null(ld))
+				set("JAVA_LD_PATH",ld)
+		}
+	}
+	platArgs <- ""
+	if(mac){
+		jrt <- try(gsp("java.runtime.version"))
+		if(!inherits(jrt,"try-error") && grepl("M4508",jrt)){
+			warning(msg("You may be using a broken release of Java for the Mac. To upgrade go to http://support.apple.com/kb/DL1572 (for MAC OS >=10.7) or http://support.apple.com/kb/DL1573 (for Mac OS 10.6)"))
+		}
+		icn <- system.file("icons", "JGR.icns", package="JGR")
+		progName <- "JGR"
+		tmp <- strsplit(jgrArgs, "-")[[1]]
+		rebrand = tmp[grepl("rebrand=",tmp)]
+		if(length(rebrand)>0){
+			rebrand <- trim(strsplit(substring(rebrand,9),",")[[1]])
+			if(length(rebrand)>0)
+				progName <- rebrand[1]
+			if(length(rebrand)>1) {
+				rb.icn <- system.file("icons", "JGR.icns", package=rebrand[2])
+				if (nzchar(rb.icn)) icn <- rb.icn
+			}
+		}
+		platArgs <- paste0(
+                        " -Xdock:icon=", shQuote(icn),
+			" -Dcom.apple.mrj.application.apple.menu.about.name=", shQuote(progName),
+			" -Xdock:name=",shQuote(progName),
+                        " -Dapple.laf.useScreenMenuBar=true",
+			" -Dcom.apple.macos.useScreenMenuBar=true -Xrs")
+	}
+	cmd <- paste0(shQuote(java), " -cp ", shQuote(ws(boot)),
+	" -Drjava.class.path=", cp,
+	" -Drjava.path=",shQuote(ws(rJavaPath)),
+	" -Dmain.class=org.rosuda.JGR.JGR "," -Djgr.load.pkgs=yes ",
+	" -Dr.arch=",arch,
+	platArgs,
+	" ", javaArgs,
+	" RJavaClassLoader",
+	" ", jgrArgs)
+	system(cmd,wait=FALSE)
+	if(windows)
+		paste0(sets,"\n",cmd,"\n")
+	else
+		paste0("#!/bin/sh\n",sets,"\n",cmd,"\n")
+}
 

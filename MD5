@@ -1,8 +1,11 @@
-fb0c39d08568207958c48847d024c5b1 *DESCRIPTION
-442ae9ce8c018b8fa10d1daec3019bd3 *NAMESPACE
-7e45ebacedba7077b8bc08053f8a78b8 *NEWS
-7dba2b65454508c66317549e65351e59 *R/JGR.R
-a3bcae6a9990987c1dc4ff8f347cf7e9 *inst/java/JGR.jar
+ad5ec65deb51f5e0889b1e1802a6be66 *DESCRIPTION
+2885deb9f72a27a9bd546807a9340f7c *NAMESPACE
+9b257c9f6c9c9c35743d5f6d8df0a594 *NEWS
+8d7f6de7ead3a061617a00ac84420514 *R/JGR.R
+3992aa5d5de00ebceb7bd0ee39c6418c *inst/icons/JGR.icns
+b039f1e3def8d0ed62b128660025ad8f *inst/icons/JGR.ico
+dc2617b84912fcbe693ee395573ff8fc *inst/icons/JGR.png
+da2cca43edc1bdbe1472937b64e79bbf *inst/java/JGR.jar
 84a97f8ec52715ae6dc2e6c5c02c2bef *inst/scripts/run.in
 c8ae798eb1fea0823203798bb3a4c419 *man/jgr.addMenu.Rd
 a57551b77721f1a5dc05c84a3bcf2a40 *man/jgr.addMenuItem.Rd
@@ -10,6 +13,5 @@ a57551b77721f1a5dc05c84a3bcf2a40 *man/jgr.addMenuItem.Rd
 f0ef29c594c0a05f8f2328401c822613 *man/jgr.addSubMenu.Rd
 78f076bc61ddfe96df24bddb09c57a41 *man/jgr.getMenuNames.Rd
 455fa50f055075c393064ed1950396a5 *man/jgr.removeMenu.Rd
+f11399723917ee7c04692124f32150e8 *man/launchJGR.Rd
 48954434993fda15cc00bc145733297f *man/supplements.Rd
-84a97f8ec52715ae6dc2e6c5c02c2bef *run.in
-54b80fe871b3a51d6746bfdc5ccaf0d4 *version

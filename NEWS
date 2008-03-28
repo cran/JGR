@@ -1,4 +1,19 @@
 Change Log
+
+1.7-16  (2013-12-21)
+    o	Added launchJGR for JGR launcher 2.0 compatibility. This allows JGR to 
+	be launched directly from R maintaining all environmental variables and
+	paths of all packages.
+    o	New Mac and Windows launchers.
+    o	JGR preferences no longer determine library paths. This had caused
+	problems with R upgrades.
+    o	DataTable menu item changed to Data Table.
+    o	Added JGR icon replacing the default Java icon in the Windows tray.
+    o	Removed nested border from console split pane, and added padding for the text.
+    o	Updated object browser to be organized by class, and have icons to bring
+	up contextual menus.
+    o	Added save support for data.frames in the Object Browser.
+
 1.7-15  (2013-05-10)
     o	minor fixes for CRAN NOTEs
     o	R 3.0.x adaptions
