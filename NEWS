@@ -1,4 +1,7 @@
 Change Log
+1.5-15 (2008-04-08)
+    o   fixed indentation and toggle comment
+
 1.5-14 (2008-04-04)
     o   fixed fonttracker for editor
     o   set always native look&feel
