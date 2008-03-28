@@ -1,4 +1,8 @@
 Change Log
+1.6-5   (2009-06-07)
+    o   new preference dialog
+    o   re-enabled help-agent in editor
+    o   fixed Load data dialog, when choosing own set name
 
 1.6-4	(2009-06-01)
     o	added informative error message when JRI is missing
