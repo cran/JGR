@@ -1,4 +1,7 @@
 Change Log
+1.7-9   (2011-11-16)
+    o   fixed help search engine for R 2.14.x 
+
 1.7-8   (2011-10-24)
     o   Added support for loading xls and xlsx files
     o   implemented temporary fix for infinite recursion crash on mac os x
