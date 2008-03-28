@@ -1,4 +1,8 @@
 Change Log
+1.6-1  (2008-06-18)
+    o   fixed Editor close behavior using the framecross
+    o   fixed ObjectBrowser NullpointerException
+
 1.6-0  (2008-06-15)
     o   load .JGRhistory from R working directory
     o   new launchers -> JGR loads JGR R package itself
