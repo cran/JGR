@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.5-12
+# Package version: 1.5-13
 #
-# $Id: JGR.R 132 2008-03-30 15:23:37Z helbig $
+# $Id: JGR.R 133 2008-03-31 16:30:46Z helbig $
 # (C)Copyright 2004-2008 Markus Helbig
 # (C)Copyright 2004,2006,2007 Simon Urbanek
 # Licensed under GPL v2

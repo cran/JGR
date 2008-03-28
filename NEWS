@@ -1,4 +1,7 @@
 Change Log
+1.5-13 (2008-03-31)
+    o   fixed fontsize bug, when changing fontsize in syntaxcoloring mode
+
 1.5-12 (2008-03-30)
     o   r-dev compatible
     o   fixed some more bugs related to linenumbers in editor
