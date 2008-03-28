@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.6-8
+# Package version: 1.7-0
 #
-# $Id: JGR.R 218 2009-06-09 17:09:40Z helbig $
+# $Id: JGR.R 241 2009-10-18 16:00:34Z helbig $
 # (C)Copyright 2004-2009 Markus Helbig
 # (C)Copyright 2009 Ian Fellows
 # (C)Copyright 2004,2006,2007 Simon Urbanek
@@ -66,9 +66,6 @@
 	# set repos
 	if (options("repos")=="@CRAN@") options(repos="http://cran.r-project.org")
 			
-	# set Path to helpFiles
-	.refreshHelpFiles()
-
   	# add PackageInstaller
 	# jgr.addMenuItem("Packages","Package Installer","installPackages()")
 }
@@ -119,7 +116,12 @@ jgr.pager <- function(file, header, title, delete.file) {
 	invisible(.jcall("org/rosuda/JGR/toolkit/TextPager",,"launchPager",as.character(file), as.character(header), as.character(title), as.logical(delete.file)))
 }
 
-jgr.set.options <- function(..., useJavaGD=TRUE, useJGRpager=TRUE) {
+jgr.browser <- function(url, ...) {
+  if (!.jgr.works) { cat("jgr.browser() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+        invisible(.jcall("org/rosuda/JGR/JGRHelp",, "showURL", as.character(url)[1]))
+}
+
+jgr.set.options <- function(..., useJavaGD=TRUE, useJGRpager=TRUE, useJGRbrowser=TRUE, useHTMLHelp=TRUE) {
   if (!.jgr.works) { cat("jgr.set.options() cannot be used outside JGR.\n"); return(invisible(NULL)) }
 	if (useJavaGD) {
     	require(JavaGD)
@@ -127,6 +129,13 @@ jgr.set.options <- function(..., useJavaGD=TRUE, useJGRpager=TRUE) {
 	}
 	if (useJGRpager) {
     	options(pager=jgr.pager)
+	}
+	if (useJGRbrowser) {
+    	options(browser=jgr.browser)
+	}
+	if (useHTMLHelp) {
+	options(help_type='html')
+	tools:::startDynamicHelp()
 	}
 }
 
@@ -158,6 +167,31 @@ jgr.addMenuSeparator <- function(menu) {
 }
 
 #'internal' functions for JGR, without them JGR is not able to survive
+
+
+print.hsearch <- function(x, ...) {
+  if (tools:::httpdPort > 0L) {
+           path <- file.path(tempdir(), ".R/doc/html")
+           dir.create(path, recursive = TRUE, showWarnings = FALSE)
+           out <- paste("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n",
+               "<html><head><title>R: help</title>\n", "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=\"UTF-8\">\n",
+               "<link rel=\"stylesheet\" type=\"text/css\" href=\"/doc/html/R.css\">\n",
+               "</head><body>\n\n<hr>\n", sep = "")
+           out <- c(out, "<p>", "Search Result", "</p><br>")
+           out <- c(out, "<table width=\"100%\" summary=\"R Package list\">\n",
+               "<tr align=\"left\" valign=\"top\">\n", "<td width=\"25%\">Topic</td><td>Package</td><td>Description</td></tr>\n")
+           
+	  result <- x$matches
+	  for (i in 1:dim(result)[1]) {
+           links <- paste("<a href=\"http://127.0.0.1:", tools:::httpdPort,"/library/", result[i,3], "/help/", result[i,1], "\">", result[i,1],"</a>", sep = "")
+           out <- c(out, paste("<tr align=\"left\" valign=\"top\">\n","<td>",links,"</td><td>",result[i,3],"</td><td>",result[i,2],"</td></tr>\n",sep=""))
+	  }
+	  out <- c(out, "</table>\n</p>\n<hr>\n</body></html>")
+          out
+	  writeLines(out, file.path(path, paste(x$pattern,".html",sep="")))
+          browseURL(paste("http://127.0.0.1:", tools:::httpdPort,"/doc/html/",x$pattern,".html", sep = ""))
+  }
+}
 
 .completeCommand <- function (x) 
 {
@@ -191,21 +225,6 @@ jgr.addMenuSeparator <- function(menu) {
 	invisible(.jcall("org/rosuda/JGR/JGR","V","setRLibs",as.character(.libPaths())))
 	invisible(.jcall("org/rosuda/JGR/JGR","V","setKeyWords",as.character(.refreshKeyWords())))
 	invisible(.jcall("org/rosuda/JGR/JGR","V","setObjects",as.character(.refreshObjects())))
-	try(.refreshHelpFiles(TRUE),silent=TRUE)
-}
-
-.refreshHelpFiles <- function(silent=FALSE) {
-	if (.Platform$OS.type == "windows") {
-		try(make.packages.html(.libPaths()))
-		try(make.search.html(.libPaths()))
-		try(fixup.libraries.URLs(.libPaths()))
-	}
-	else {
-    	if (!silent)
-		cat("Creating per-session help links...\n")
-		.Script("sh", "help-links.sh", paste(tempdir(), paste(.libPaths(), collapse = " ")))
-		make.packages.html()
-	}
 }
 
 # refresh KeyWords (used by SyntaxHighlighting)

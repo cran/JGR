@@ -1,4 +1,15 @@
 Change Log
+1.7-0   (2009-10-28)
+    o   switched to REngine API (Callbacks are still RNI)
+    o   RPackageManager resizable
+    o   use rJava 0.8
+    o   preference to avoid "Save workspace dialog"
+    o   set working directory when opening workspace
+    o   JGRHelp is a fully used as browser (JGR now can only be used with R 2.10)
+
+1.6-8  (2009-08-20)
+    o   new rJava version
+
 1.6-7   (2009-06-10)
     o   fixed version number
  
@@ -100,8 +111,6 @@ Change Log
 1.5-5	(2007-09-04)
     o	raise Java stack limit to 512MB (in the run script)
     o   fixed "Load DataFile dialog" for Windows (Sun fixed a bug in Java)
-    o   skip "setwd" at startup on Vista 
-
 1.5-4   (2007-08-31)
     o   fix closing Console window when select Cancel
 

@@ -27,8 +27,8 @@
 #define arch_str "/ppc"
 #elif defined __i386__
 #define arch_str "/i386"
-#elif defined __x86_64__
-#define arch_str "/x86_64"
+//#elif defined __x86_64__
+//#define arch_str "/x86_64"
 #elif defined __ppc64__
 #define arch_str "/ppc64"
 #elif defined __arm__

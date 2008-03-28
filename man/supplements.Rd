@@ -2,9 +2,11 @@
 \alias{JGR}
 \alias{installPackages}
 \alias{jgr.pager}
+\alias{jgr.browser}
 \alias{jgr.set.options}
 \alias{object.browser}
 \alias{package.manager}
+\alias{print.hsearch}
 \title{
   Supplemental JGR functions
 }
@@ -22,9 +24,11 @@
 JGR(update = FALSE)
 installPackages(contriburl = NULL, type = getOption("pkgType"))
 jgr.pager(file, header, title, delete.file)
-jgr.set.options(..., useJavaGD = TRUE, useJGRpager = TRUE)
+jgr.browser(url, ...)
+jgr.set.options(..., useJavaGD = TRUE, useJGRpager = TRUE, useJGRbrowser = TRUE, useHTMLHelp = TRUE)
 object.browser()
 package.manager()
+print.hsearch(x, ...)
 }
 \arguments{
   \item{update}{If set to \code{TRUE} then JGR is updated for the RoSuDa
@@ -36,10 +40,15 @@ package.manager()
   \item{title}{overall title for the display}
   \item{delete.file}{should the files be deleted after display?  Used
     for temporary files.}
+  \item{url}{url to show}
   \item{useJavaGD}{if set to \code{TRUE}, \code{JavaGD} is set as the
     default device}
   \item{useJGRpager}{if set to \code{TRUE}, \code{jgr.pager} function is
     used as the default pager}
-  \item{...}{additional options to set}
+  \item{useJGRbrowser}{if set to \code{TRUE}, \code{jgr.browser} function is
+    used as the default browser}
+  \item{useHTMLHelp}{if set to \code{TRUE}, HTML help used as the default}
+  \item{...}{additional parameters or options to set}
+  \item{x}{result of help.search}
 }
 \keyword{programming}
