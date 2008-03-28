@@ -1,4 +1,10 @@
 Change Log
+1.5-14 (2008-04-04)
+    o   fixed fonttracker for editor
+    o   set always native look&feel
+    o   fixed printin line number
+    o   fixed meta+enter shortcut for running commands from editor
+
 1.5-13 (2008-03-31)
     o   fixed fontsize bug, when changing fontsize in syntaxcoloring mode
 
