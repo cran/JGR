@@ -1,4 +1,7 @@
 Change Log
+1.7-1   (2010-03-27)
+    o   use rJava 0.8-3
+
 1.7-0   (2009-10-28)
     o   switched to REngine API (Callbacks are still RNI)
     o   RPackageManager resizable
