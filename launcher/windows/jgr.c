@@ -6,62 +6,112 @@
 #include <process.h>
 #include "prefsp.h"
 
-#define JGR_LOADER_VERSION "1.6"
+/* the version number should parse to a real number but is defined as a string */
+#define JGR_LOADER_VERSION "1.61"
 
-char RegStrBuf[32768];
+/* ChangeLog
+   1.61  - adds SET_DEFAULT_PACKAGES option (see below) and --libpath=xx, --rhome=xx
+           Also -Xmx512m is now the default and can be overridden with -Xmx... argument
+*/
 
-char *rhome=0;
-char *temp=0, *ofn;
-char *javah=0;
+/* if SET_DEFAULT_PACKAGES is defined to 1 then the launcher sets R_DEFAULT_PACKAGES,
+   otherwise it is left untouched. However, this needs cooperation in JGR which should
+   load requested packages if the jgr.load.pkgs property is set to "yes"
+   The default is now to NOT modify R_DEFAULT_PACKAGES, because the list is
+   version-dependent. Instead, JGR should load any packages that the user selects.
 
-char *path, *myself, *javakey, *java="javaw", *rhomerequest=0, *debugpar=0;
-FILE *f=0;
+   Although this was the change that was supposed to happen in 1.6 (and that was the whole
+   point of increasing the version number) it didn't. For now I won't touch the version
+   number and hopefully the migration is painless as long as people update their JGR
+   package.
+   				   					[SU 2008/07/22]
+
+   The following command-line parameters are supported:
+   --debug	enable debug mode (this parameter is also passed on to JGR)
+   --libpath=..	use .. as library path instead of R_HOME/library
+ 		NOTE: this can be dangerous if the path if out of sync with the R used
+		hence it is recommended to use it in conjunction with --rhome
+   --rhome=..	use .. as R_HOME instead of the registry setting
+
+   -Xmx.. is passed on, but the default is changed to -Xmx512m if not specified
+ */
+
+static HWND wh;
+
+static char RegStrBuf[32768];
+
+static char *rhome=0;
+static char *temp=0, *ofn;
+static char *javah=0;
+
+static char *path, *javakey, *java="javaw", *rhomerequest=0;
+static FILE *f = 0;
+
+static char *libpath;
+static char *xmx = "-Xmx512m";
 
 static char bootpath[512], drJavaPath[512];
 
-void makeShort(char *dbuf, char *scp, int len) {
+static void startDebug() {
+ 	if (!f) {
+		OSVERSIONINFO si;
+		si.dwOSVersionInfoSize = sizeof(si);
+		f=fopen("C:\\JGRdebug.txt","w");
+		if (!f) f=fopen("JGRdebug.txt", "w");
+		if (!f) return;
+		GetVersionEx(&si);
+		fprintf(f, "System: Version %d.%d (build %d), platform %x [%s]\n\n", (int)si.dwMajorVersion,
+			(int)si.dwMinorVersion, (int)si.dwBuildNumber, (int)si.dwPlatformId, si.szCSDVersion);
+		fprintf(f,"JGR loader version " JGR_LOADER_VERSION " (build " __DATE__ ")\n\n");
+		java = "java"; /* use console version of Java (as opposed to windowed javaw) */
+		fflush(f);
+	}
+}
+
+static void makeShort(char *dbuf, char *scp, int len) {
   int pl = GetShortPathName(dbuf, scp, len);
   
   if (pl>len || pl==0) {
     strcpy(scp, dbuf);
     if (f) {
-      fprintf(f, "!!> GetShortPath for %s returned %d. Using long path which may fail!\n", dbuf);
+      fprintf(f, "!!> GetShortPath for %s returned %d. Using long path which may fail!\n", dbuf, pl);
       if (pl==0) {
 	LPVOID lpMsgBuf;
 	FormatMessage(
 		      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		      NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
 		      (LPTSTR) &lpMsgBuf, 0, NULL);
-	fprintf(f, "GetShortPath reason for failure: %s\n", lpMsgBuf);
+	fprintf(f, "GetShortPath reason for failure: %s\n", (char*) lpMsgBuf);
 	LocalFree( lpMsgBuf );
       }
     }
   }
 }
 
-void gfae(char *dbuf) {
+static void gfae(char *dbuf) {
   if (f) {
     LPVOID lpMsgBuf;
     FormatMessage(
 		  FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
 		  NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
 		  (LPTSTR) &lpMsgBuf, 0, NULL);
-    fprintf(f, "GetFileAttributes(%s) reason for failure: %s\n", dbuf, lpMsgBuf);
+    fprintf(f, "GetFileAttributes(%s) reason for failure: %s\n", dbuf, (char*)lpMsgBuf);
     LocalFree( lpMsgBuf );
   }
 }
 
 
-char dbuf[32768];
-char npkg[32768];
-char scp[32768];
-char allcp[32768];
-char srhome[32768];
+static char dbuf[32768];
+static char npkg[32768];
+static char scp[32768];
+static char allcp[32768];
+static char srhome[32768];
 
+/* for compatibility with unix-style paranmeters, created by parseParams */
 char **argv=0;
 int  argc=0;
 
-FILE *p = 0;
+static FILE *p = 0;
 
 void parseParams(char *str, int shift)
 {
@@ -79,42 +129,72 @@ void parseParams(char *str, int shift)
 		as++;
 		while (*c==' ') c++;
 	}
-	argv=(char**) malloc(sizeof(char*)*(as+shift+1));
-	memset(argv,0,sizeof(char*)*(as+shift+1));
+	argv=(char**) malloc(sizeof(char*)*(as + shift + 8));
+	/* the last param is guaranteed to be NULL regardless of whether we drop some
+	   we also leave some space in case something needs to be appended */
+	memset(argv,0,sizeof(char*)*(as + shift + 8));
 
 	if (f) fprintf(f, "parseParams> %d parameters parsed.\n", as);
-	
-	c=str;
+
+	c = str;
 	while (*c) {
-		char *lp=c;
-		if (*c=='"' || *c=='\'') {
-			char lc=*c; c++;
-			lp=c;
-			while (*c && *c!=lc) { if (*c=='\\') c++; c++; }
-		} else {
-			while (*c && *c!=' ') { if (*c=='\\') c++; c++; }
+		char *lp = c;
+		if (*c == '"' || *c == '\'') {
+			char lc = *c; c++; /* lc is the quoting character - we'll need to remove escapes */
+			lp = c;
+			while (*c && *c != lc) { if (*c == '\\') c++; c++; }
+		} else { /* no quote? great, just skip escaped spaces */
+			while (*c && *c != ' ') { if (*c == '\\') c++; c++; }
 		}
-		argv[shift]=(char*) malloc(c-lp+1);
-		if (c!=lp)
-			memcpy(argv[shift],lp,c-lp);
-		argv[shift][c-lp]=0;
+		argv[shift] = (char*) malloc(c - lp + 1);
+		if (c != lp)
+			memcpy(argv[shift], lp, c - lp);
+		argv[shift][c - lp] = 0;
 		if (f) fprintf(f, "parseParams par %d> \"%s\"\n", shift, argv[shift]);
-		shift++;
+		/* interpret parameters that are ments for us */
+		if (!strncmp(argv[shift], "-Xmx", 4)) {
+			xmx = strdup(argv[shift]);
+			if (f) fprintf(f, " - Xmx override from command line: '%s'\n", xmx);
+		} else if (!strcmp(argv[shift], "--debug")) {
+			startDebug();
+			shift++; /* --debug will be passed on to JGR */
+		} else if (!strncmp(argv[shift], "--libpath=", 10)) {
+			char slp[512];
+			makeShort(argv[shift] + 10, slp, 512);
+			if (f) fprintf(f, " - overriding libpath, short variant: '%s'\n", slp);
+			if (GetFileAttributes(slp)==0xFFFFFFFF) {
+				gfae(slp);
+				MessageBox(wh, "Non-existent directory specified in --libpath=.","Invalid command line parameter",MB_OK|MB_ICONERROR);
+				exit(1);
+			}
+			libpath = strdup(slp);
+		} else if (!strncmp(argv[shift], "--rhome=", 8)) {
+			rhome = strdup(argv[shift] + 8);
+			if (f) fprintf(f, " - overriding RHOME: '%s'\n", rhome);
+			if (GetFileAttributes(rhome)==0xFFFFFFFF) {
+				gfae(rhome);
+				MessageBox(wh, "Non-existent directory specified in --rhome=.","Invalid command line parameter",MB_OK|MB_ICONERROR);
+				exit(1);
+			}
+		} else
+			shift++;
 		if (*c=='\'' || *c=='"') c++;
 		while (*c==' ') c++;
 	}
+	argc = shift;
+	if (f) fflush(f);
 }
 
-/* returns package verision of a given package - searches $R_HOME/library/ only
+/* returns package verision of a given package - searches libpath
    given version string aa.bb-cc the returned long is 0xaabbcc (except that
    vs is treated as decimal number - i.e. 1.2-12 will return 0x01020c )
    returns 0 if package doesn't exist or there is no Version entry */
-long getPkgVersion(char *pkg) {
+static long getPkgVersion(char *pkg) {
    char dfn[1024];
    FILE *pf;
 
-   strcpy(dfn,srhome);
-   strcat(dfn,"\\library\\");
+   strcpy(dfn,libpath);
+   strcat(dfn,"\\");
    strcat(dfn,pkg);
    strcat(dfn,"\\DESCRIPTION");
    pf = fopen(dfn,"r");
@@ -152,7 +232,6 @@ long getPkgVersion(char *pkg) {
 int
 PASCAL WinMain(HINSTANCE hInstance, HINSTANCE ii, LPSTR cmdl, int nCmdShow)
 {
-   HWND wh=GetDesktopWindow();
    HKEY k;
    DWORD t,s=32767;
    char *tp;
@@ -163,31 +242,25 @@ PASCAL WinMain(HINSTANCE hInstance, HINSTANCE ii, LPSTR cmdl, int nCmdShow)
    int prefsVer = 0;
 
    *RegStrBuf=0;
+   wh=GetDesktopWindow();
 
-   if (!strncmp(cmdl,"--debug",7)) {
-      OSVERSIONINFO si;
-      si.dwOSVersionInfoSize = sizeof(si);
-      f=fopen("C:\\JGRdebug.txt","w");
-      GetVersionEx(&si);
-      fprintf(f, "System: Version %d.%d (build %d), platform %x [%s]\n\n", si.dwMajorVersion,
-                 si.dwMinorVersion, si.dwBuildNumber, si.dwPlatformId, si.szCSDVersion);
-      fprintf(f,"JGR loader version " JGR_LOADER_VERSION " (build " __DATE__ ")\n\n");
-      debugpar="--debug";
-   }
+   if (!strncmp(cmdl,"--debug",7)) startDebug();
 
-   parseParams(cmdl,7); /* we need extra 7 preceding pars */
+   parseParams(cmdl, 10); /* we need extra 10 preceding pars as defined at the end */
 
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SOFTWARE\\R-core\\R",0,KEY_QUERY_VALUE,&k)!=ERROR_SUCCESS ||
-       RegQueryValueEx(k,"InstallPath",0,&t,RegStrBuf,&s)!=ERROR_SUCCESS) {
-     if (RegOpenKeyEx(HKEY_CURRENT_USER,"SOFTWARE\\R-core\\R",0,KEY_QUERY_VALUE,&k)!=ERROR_SUCCESS ||
+   if (!rhome) { /* if --rhome=.. was not specified, get it from registry */
+     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SOFTWARE\\R-core\\R",0,KEY_QUERY_VALUE,&k)!=ERROR_SUCCESS ||
 	 RegQueryValueEx(k,"InstallPath",0,&t,RegStrBuf,&s)!=ERROR_SUCCESS) {
-
-       MessageBox(wh, "Can't find R home in the registry.\nPlease re-install JGR if you installed a new R version or re-install R and let it register itself in the registry during the installation.","Can't find R",MB_OK|MB_ICONERROR);
-       return -1;
+       if (RegOpenKeyEx(HKEY_CURRENT_USER,"SOFTWARE\\R-core\\R",0,KEY_QUERY_VALUE,&k)!=ERROR_SUCCESS ||
+	   RegQueryValueEx(k,"InstallPath",0,&t,RegStrBuf,&s)!=ERROR_SUCCESS) {
+	 
+	 MessageBox(wh, "Can't find R home in the registry.\nPlease re-install JGR if you installed a new R version or re-install R and let it register itself in the registry during the installation.","Can't find R",MB_OK|MB_ICONERROR);
+	 return -1;
+       }
      }
+     RegCloseKey(k); s=32767;
+     rhome=(char*) malloc(strlen(RegStrBuf)+1); strcpy(rhome, RegStrBuf);
    }
-   RegCloseKey(k); s=32767;
-   rhome=(char*) malloc(strlen(RegStrBuf)+1); strcpy(rhome, RegStrBuf);
 
    if (f) fprintf(f, "> rhome=\"%s\"\n", rhome);
 
@@ -197,14 +270,14 @@ PASCAL WinMain(HINSTANCE hInstance, HINSTANCE ii, LPSTR cmdl, int nCmdShow)
       if (pl>32768 || pl==0) {
          strcpy(srhome, dbuf);
          if (f) {
-            fprintf(f, "!!> GetShortPath for R_HOME returned %d. Using long path which may fail!\n");
+	   fprintf(f, "!!> GetShortPath for R_HOME returned %d. Using long path which may fail!\n", pl);
             if (pl==0) {
                LPVOID lpMsgBuf;
                FormatMessage(
                  FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
                  NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
                  (LPTSTR) &lpMsgBuf, 0, NULL);
-               fprintf(f, "GetShortPath reason for failure: %s\n", lpMsgBuf);
+               fprintf(f, "GetShortPath reason for failure: %s\n", (char*) lpMsgBuf);
                LocalFree( lpMsgBuf );
             }
          }
@@ -213,12 +286,19 @@ PASCAL WinMain(HINSTANCE hInstance, HINSTANCE ii, LPSTR cmdl, int nCmdShow)
 
    if (f) fprintf(f, "> srhome=\"%s\"\n\n", srhome);
 
+   /* set default libpath to R_HOME/library */
+   if (!libpath) {
+     libpath = (char*) malloc(strlen(srhome) + 10);
+     strcpy(libpath, srhome);
+     strcat(libpath, "\\library");
+   }
+
    /* check if JGR exists and support packages are installed */
 chkJGRpkg:
    *npkg=0;
 
    /* requires JGR 1.5-19 or higher */
-   strcpy(dbuf,srhome); strcat(dbuf,"\\library\\JGR\\java\\JGR.jar");
+   strcpy(dbuf, libpath); strcat(dbuf,"\\JGR\\java\\JGR.jar");
    p = fopen(dbuf,"r");
    if (!p) strcat(npkg,"\"JGR\",");
    else {
@@ -246,6 +326,7 @@ chkJGRpkg:
       if (attempt>1) {
          FILE *err = fopen(ofn,"r");
          if (f) fprintf(f, "** still missing: %s\n", npkg);
+	 if (f) fflush(f);
          sprintf(dbuf,"One or more packages could not be installed or is still too old.\nPlease install the following R packages manually: %s",npkg);
          if (err) {
             strcat(dbuf, "\nIf in doubt, try another mirror.\n\nCorresponding R output:\n");
@@ -281,18 +362,33 @@ chkJGRpkg:
       strcpy(dbuf,temp); strcat(dbuf,"\\instPkg.r");
       temp = (char*) malloc(strlen(dbuf)+1); strcpy(temp,dbuf);
 
+      if (f) fprintf(f, "creating script file '%s'\n", temp);
+      if (f) fflush(f);
       p = fopen(temp,"w");
+      if (!p) {
+	if (f) fprintf(f, "cannot create script file!\n");
+	MessageBox(wh, "Cannot create script file to run R, please use install.packages in R ro install rJava, JavaGD, iplots and JGR.","JGR Installer",MB_OK|MB_ICONSTOP);
+	exit(1);
+      }
 
-      /*-------------- CRAN repository -------------*/
-	  if (strstr(cmdl,"--rforge"))
-	  {
-		fprintf(p,"install.packages(c(%s),,c('http://rforge.net/'))\n",npkg);
+      { /* we need to install those packages to the same place that we will be looking for it
+	   and that is specified by libpath. In order to do that we have to escape that path. */
+	char *qlp = (char*) malloc(strlen(libpath) * 2 + 2); /* worst case - everything is escaped */
+	{ /* copy libpath but escape any " or \ */
+	  char *c = qlp, *d = libpath;
+	  while (*d) {
+	    if (*d == '\\' || *d == '"') *(c++) = '\\';
+	    *(c++) = *(d++);
+	  }
+	  *c = 0;
+	}
+	if (strstr(cmdl,"--rforge"))
+	  fprintf(p,"install.packages(c(%s),\"%s\",c('http://rforge.net/'))\n", npkg, qlp);
+	else 
+	  fprintf(p,"install.packages(c(%s),\"%s\",c('http://cran.r-project.org/','http://rforge.net/'))\n", npkg, qlp);
+	fclose(p);
+	free(qlp);
       }
-	  else 
-	  {
-	  	fprintf(p,"install.packages(c(%s),,c('http://cran.r-project.org/'))\n",npkg);
-      }
-	  fclose(p);
 
       temp = (char*) malloc(strlen(dbuf)+1); strcpy(temp,dbuf);
 
@@ -309,11 +405,13 @@ chkJGRpkg:
          memset(&si,0,sizeof(si));
          si.cb=sizeof(si);
          if (f) fprintf(f,"CreateProcess(\"%s\",\"%s\",...)\n", RegStrBuf, dbuf);
+	 if (f) fflush(f);
          isOk=CreateProcess(RegStrBuf, dbuf, 0, 0, 0, 0, 0, 0, &si, &pi);
          if (f) fprintf(f," - return value: %d\n", isOk);
          if (isOk) {
             DWORD xc = 999;
             if (f) fprintf(f," - waiting for R to finish\n");
+	    if (f) fflush(f);
             WaitForInputIdle(pi.hProcess, INFINITE);
             GetExitCodeProcess(pi.hProcess, &xc);
             while (xc==STILL_ACTIVE) {
@@ -357,25 +455,27 @@ chkJGRpkg:
       char *key=prefs[i++];
    	char *val;
    	if (!key || !prefs[i]) break;
- 	   val=prefs[i++];
-      if (f) fprintf(f, "prefs> %s=%s\n", key, val);
-      if (!strcmp(key,"DefaultPackages") && val) {
-   	      char *c=val, *d=val;
-      	   while (*c) {
-      	   if (*c!=' ' && *c!='\t') { *d=*c; d++; }
-   	      c++;
+	val=prefs[i++];
+	if (f) fprintf(f, "prefs> %s=%s\n", key, val);
+#if SET_DEFAULT_PACKAGES
+	if (!strcmp(key,"DefaultPackages") && val) {
+	  char *c=val, *d=val;
+	  while (*c) {
+	    if (*c!=' ' && *c!='\t') { *d=*c; d++; }
+	    c++;
    	  }
    	  *d=0;
-       /*   if (!strstr(val, "JGR")) {
-   		   char *c=(char*) malloc(strlen(val)+5);
-   		   strcpy(c, val);
-   		   strcat(c, ",JGR");
-   	      val=c;
-   	  }*/
+	  /*   if (!strstr(val, "JGR")) {
+	       char *c=(char*) malloc(strlen(val)+5);
+	       strcpy(c, val);
+	       strcat(c, ",JGR");
+	       val=c;
+	       }*/
    	  if (f) fprintf(f,"set (from prefs): R_DEFAULT_PACKAGES=\"%s\"\n", val);
    	  SetEnvironmentVariable("R_DEFAULT_PACKAGES", val);
    	  setDefPkg=1;
    	}
+#endif
    	if (!strcmp(key,"InitialRLibraryPath") && val) {
    	  if (f) fprintf(f,"set (from prefs): R_LIBS=\"%s\"\n", val);
    	  SetEnvironmentVariable("R_LIBS", val);
@@ -401,10 +501,12 @@ chkJGRpkg:
       SetEnvironmentVariable("R_LIBS", 0);
    }
 
+#if SET_DEFAULT_PACKAGES
    if (!setDefPkg) {
-      SetEnvironmentVariable("R_DEFAULT_PACKAGES", "utils,grDevices,graphics,stats,methods,datasets");
-      if (f) fprintf(f, "Fallback default packages: utils,grDevices,graphics,stats,methods,datasets\n");
+     SetEnvironmentVariable("R_DEFAULT_PACKAGES", "utils,grDevices,graphics,stats,methods,datasets");
+     if (f) fprintf(f, "Fallback default packages: utils,grDevices,graphics,stats,methods,datasets\n");
    }
+#endif
 
    javakey="Software\\JavaSoft\\Java Runtime Environment";
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,javakey,0,KEY_QUERY_VALUE,&k)!=ERROR_SUCCESS ||
@@ -456,17 +558,17 @@ chkJGRpkg:
    strcat(path,javah); strcat(path,"\\bin\\client;");
    strcat(path,javah); strcat(path,"\\bin;");
    strcat(path,rhome); strcat(path,"\\bin;");
-   strcat(path,rhome); strcat(path,"\\library\\rJava\\jri;");
+   strcat(path,libpath); strcat(path,"\\rJava\\jri;");
    strcat(path,tp);
 
    *allcp=0;
 
    strcpy(drJavaPath, "-Drjava.path=");
-   strcpy(dbuf,rhome); strcat(dbuf,"\\library\\rJava");
+   strcpy(dbuf,libpath); strcat(dbuf,"\\rJava");
    if (GetFileAttributes(dbuf)==-1) {
      gfae(dbuf);
-     strcpy(dbuf, "Cannot find rJava package in "); strcat(dbuf, rhome);
-      strcat(dbuf, "\\library\\rJava.\nPlease re-install rJava R package and try again.");
+     strcpy(dbuf, "Cannot find rJava package in "); strcat(dbuf, libpath);
+      strcat(dbuf, "\\rJava.\nPlease re-install rJava R package and try again.");
       MessageBox( NULL, dbuf, "rJava package is missing", MB_OK|MB_ICONSTOP );
       return -1;
    }
@@ -477,35 +579,35 @@ chkJGRpkg:
    strcat(bootpath, "\\java\\boot");
 
    strcpy(allcp, "-Drjava.class.path=");
-   strcpy(dbuf,rhome); strcat(dbuf,"\\library\\rJava\\jri\\JRI.jar");
+   strcpy(dbuf,libpath); strcat(dbuf,"\\rJava\\jri\\JRI.jar");
    if (GetFileAttributes(dbuf)==-1) {
      gfae(dbuf);
-     strcpy(dbuf, "Cannot find JRI Java classes in "); strcat(dbuf, rhome);
-      strcat(dbuf, "\\library\\rJava\\jri.\nPlease re-install rJava R package and try again.");
+     strcpy(dbuf, "Cannot find JRI Java classes in "); strcat(dbuf, libpath);
+      strcat(dbuf, "\\rJava\\jri.\nPlease re-install rJava R package and try again.");
       MessageBox( NULL, dbuf, "JRI JAR file is missing", MB_OK|MB_ICONSTOP );
       return -1;
    }
    makeShort(dbuf, scp, 32768);
    strcat(allcp, scp);
 
-   strcpy(dbuf,rhome); strcat(dbuf,"\\library\\iplots\\java\\iplots.jar");
+   strcpy(dbuf,libpath); strcat(dbuf,"\\iplots\\java\\iplots.jar");
    if (GetFileAttributes(dbuf)==-1) {
      gfae(dbuf);
-     strcpy(dbuf, "Cannot find iPlots Java classes in "); strcat(dbuf, rhome);
-      strcat(dbuf, "\\library\\iplots\\java.\nPlease re-install iplots R package and try again.");
+     strcpy(dbuf, "Cannot find iPlots Java classes in "); strcat(dbuf, libpath);
+      strcat(dbuf, "\\iplots\\java.\nPlease re-install iplots R package and try again.");
       MessageBox( NULL, dbuf, "iPlots JAR file is missing", MB_OK|MB_ICONSTOP );
       return -1;
    }
    makeShort(dbuf, scp, 32768);
    strcat(allcp,";"); strcat(allcp,scp);
 
-   strcpy(dbuf,rhome); strcat(dbuf,"\\library\\JGR\\java\\JGR.jar");
+   strcpy(dbuf,libpath); strcat(dbuf,"\\JGR\\java\\JGR.jar");
    if (GetFileAttributes(dbuf)==-1) {
      gfae(dbuf);
-     strcpy(dbuf, "Cannot find JGR in "); strcat(dbuf, rhome);
-      strcat(dbuf, "\\library.\nPlease re-install JGR and try again.");
-      MessageBox( NULL, dbuf, "JGR's JAR file missing", MB_OK|MB_ICONSTOP );
-      return -1;
+     strcpy(dbuf, "Cannot find JGR in "); strcat(dbuf, libpath);
+     strcat(dbuf, ".\nPlease re-install JGR and try again.");
+     MessageBox( NULL, dbuf, "JGR's JAR file missing", MB_OK|MB_ICONSTOP );
+     return -1;
    }
    makeShort(dbuf, scp, 32768);
    strcat(allcp,";"); strcat(allcp,scp);
@@ -515,9 +617,9 @@ chkJGRpkg:
       strcpy(path,javah); strcat(path,"\\bin\\client;");
       strcat(path,javah); strcat(path,"\\bin;");
       strcat(path,rhome); strcat(path,"\\bin;");
-      strcat(path,rhome); strcat(path,"\\library\\rJava\\jri;");
-      strcat(path,rhome); strcat(path,"\\library\\JGR;");
-      strcat(path,rhome); strcat(path,"\\library\\JGR\\cont;");
+      strcat(path,libpath); strcat(path,"\\rJava\\jri;");
+      strcat(path,libpath); strcat(path,"\\JGR;");
+      strcat(path,libpath); strcat(path,"\\JGR\\cont;");
       if (!SetEnvironmentVariable("PATH",path)) {
          LPVOID lpMsgBuf;
 
@@ -555,21 +657,41 @@ chkJGRpkg:
       fprintf(f, "desired PATH: \"%s\"\n", path);
       fprintf(f, "actual PATH: \"%s\"\n", envb);
       fprintf(f, "getenv PATH: \"%s\"\n", getenv("PATH"));
-      fprintf(f, "start: %s %s -cp %s %s -Dmain.class=org.rosuda.JGR.JGR RJavaClassLoader\n", dbuf, allcp, bootpath, drJavaPath);
-      fclose(f);
    }
 
-   if (debugLevel>0) debugpar="--debug";
-   if (f) fflush(f);
+   if (debugLevel > 0 && !f) { /* debug level set in the preferences */
+   	startDebug();
+	argv[argc++] = "--debug";
+   }
    /* don't forget to fix the call to parseParams if you ever add/remove parameters here! */
    argv[0]=dbuf;
    argv[1]=allcp;
-   argv[2]="-cp";
-   argv[3]=bootpath;
-   argv[4]=drJavaPath;
-   argv[5]="-Dmain.class=org.rosuda.JGR.JGR";
-   argv[6]="RJavaClassLoader";
-   /* the remaining argvs were set by parseParams. now, let's rock ... */
+   argv[2]=xmx; /* -Xmx... */
+   argv[3]="-cp";
+   argv[4]=bootpath;
+   argv[5]=drJavaPath;
+   argv[6]="-Dmain.class=org.rosuda.JGR.JGR";
+#if SET_DEFAULT_PACKAGES
+   argv[7]="-Djgr.load.pkgs=no";
+#else
+   argv[7]="-Djgr.load.pkgs=yes";
+#endif
+   argv[8]="-Djgr.loader.ver=" JGR_LOADER_VERSION;
+   argv[9]="RJavaClassLoader";
+   /* the remaining argvs were set by parseParams */
+   argv[argc] = 0; /* set sentinel (parseParams leaves enough trailing space) */
+
+   /* dump all startup parameters */
+   if (f) {
+     int i = 0;
+     while (argv[i]) {
+       fprintf(f,"argv[%d]:%s\n", i, argv[i]);
+       i++;
+     }     
+     fclose(f);
+   }
+
+   /* now, let's rock ... */
    execvp(dbuf,(const char* const*)argv);
 
    return 0;

@@ -45,7 +45,7 @@ fi
 NO_SIG=1
 export NO_SIG
 export R_HOME
-export R_DEFAULT_PACKAGES
+##export R_DEFAULT_PACKAGES
 export LD_LIBRARY_PATH
 ## make sure Java doesn't screw up formatting of doubles
 LC_NUMERIC=C

@@ -1,4 +1,18 @@
 Change Log
+1.6-2	(2008-07-24)
+    o	Windows launcher now supports --libpath=xx and --rhome=xx
+	command line arguments to override the location of R (by
+	default taken from the registry) or the location of libraries
+	(default is R_HOME/library). In addition default stack
+	size has been increased to 512Mb and can be changed using
+	-Xmx.. argument.
+    o	Mac and Windows launchers no longer set R_DEFAULT_PACKAGES
+	but instead requested packages are loaded in JGR on startup.
+	This should make it easier to switch R versions.
+	(launcher version is now 1.61)
+    o   Unix start script will also no longer set R_DEFAULT_PACKAGES 
+        at startup
+
 1.6-1  (2008-06-18)
     o   fixed Editor close behavior using the framecross
     o   fixed ObjectBrowser NullpointerException

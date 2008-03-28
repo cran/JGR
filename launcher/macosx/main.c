@@ -8,31 +8,47 @@
 #include "prefsp.h"
 #include "javacf.h"
 
-#define JGR_LOADER_VERSION "1.6"
+/* JGR Loader version should always parse to a real number */
+#define JGR_LOADER_VERSION "1.61"
+/* Loader generation can be requested in the DESCRIPTION of the JGR package */
 #define JGR_LOADER_GENERATION 2
+
+/* ChangeLog
+   1.61  - SET_DEFAULT_PACKAGES (default unset) determines whether R_DEFAULT_PACKAGES will be set
+           or not. To notify JGR jgr.load.pkgs property is set to "yes" if it's JGR's responsibility
+           to load packages (default) or "no" if the loader loaded them using R_DEFAULT_PACKAGES.
+   1.6
+ */
 
 #define DEFAULT_RHOME "/Library/Frameworks/R.framework/Resources"
 
+/* find out the architecture of this loader and use it to set R_ARCH */
 #ifdef __ppc__
 #define arch_str "/ppc"
-#else
-#ifdef __i386__
+#elif defined __i386__
 #define arch_str "/i386"
-#endif
+#elif defined __x86_64__
+#define arch_str "/x86_64"
+#elif defined __ppc64__
+#define arch_str "/ppc64"
+#elif defined __arm__
+#define arch_str "/arm"
 #endif
 
-char *rhome;
-char *libroot = 0;
-char *cran = "http://cran.r-project.org/";
+static char *rhome;
+static char *libroot = 0;
+static char *cran = "http://cran.r-project.org/";
 /* char *cran = "http://www.rforge.net/"; */
+
+static char *xmx = "-Xmx512m"; /* default memory setting */
 
 /* from originally from the Windows launcher jgr.c */
 
 FILE *f = 0; /* debug file - not used here */
 
-/* returns package verision of a given package - searches $R_HOME/library/ only
-given version string aa.bb-cc the returned long is 0xaabbcc (except that
-															 vs is treated as decimal number - i.e. 1.2-12 will return 0x01020c )
+/* returns package version of a given package - searches $R_HOME/library/ only
+ given version string aa.bb-cc the returned long is 0xaabbcc (except that
+ vs is treated as decimal number - i.e. 1.2-12 will return 0x01020c )
 returns 0 if package doesn't exist or there is no Version entry */
 long getPkgVersion(char *pkg) {
 	char dfn[1024];
@@ -90,63 +106,64 @@ long getPkgVersion(char *pkg) {
 
 /* the main stuff */
 
-char buf[8192], tbuf[1024], jrilib[2048], npkg[512];
-int debugLevel=0;
-FILE *debugStream=0;
-struct stat sts;
+static char buf[8192], tbuf[1024], jrilib[2048], npkg[512];
+static int debugLevel=0;
+static struct stat sts;
 
-#define userArgs 16
+#define userArgs 24
 
 int main(int argc, char* argv[])
 {
-    CFStringRef urls=0;
-    int urll=0;
+	CFStringRef urls=0;
+	int urll=0;
 	int pass=0;
 	int i;
-    CFBundleRef mb = CFBundleGetMainBundle();
-    char *dylib=getenv("DYLD_LIBRARY_PATH");
-    char *urlcs;
-    char *clspath, *bootpath;
+	CFBundleRef mb = CFBundleGetMainBundle();
+	char *dylib=getenv("DYLD_LIBRARY_PATH");
+	char *urlcs;
+	char *clspath, *bootpath;
 	char *drJavaPath;
 	char **prefs;
-    char *rhomerequest=0;
+	char *rhomerequest=0;
+#if SET_DEFAULT_PACKAGES
 	int  setDefPkg=0;
+#endif
 	
 	char *jargv[64];
-	int jargc=userArgs;
+	int jargc = userArgs;
 	
 	{
 		char *c = getenv("CRAN");
 		if (c && *c) cran = c;
 	}
 	
-    if (!mb) {
-        fprintf(stderr, "JGR FATAL: Can't get main bundle!\n");
-        return -1;
-    } else {
-        CFURLRef rdurl = CFBundleCopyBundleURL(mb);
-        if (!rdurl) {
-            fprintf(stderr, "JGR FATAL: Can't get main bundle URL!\n");
-            return -1;
-        }
-        urls = CFURLCopyFileSystemPath(rdurl,kCFURLPOSIXPathStyle);
-        if (!urls) {
-            fprintf(stderr, "JGR FATAL: Can't get main bundle path!\n");
-            return -1;
-        }
-        CFRelease(rdurl);
-        CFRelease(mb);
-    }
-    
-    if (!CFStringGetCString(urls, buf, 1024, kCFStringEncodingUTF8)) {
-        fprintf(stderr, "JGR FATAL: Can't store main bundle path!\n");
-        return -1;
-    }
-    urll=strlen(buf);
-    urlcs=(char*)malloc(urll+1);
-    strcpy(urlcs, buf);
-    
-    if (dylib) strcpy(buf,dylib); else *buf=0;
+	if (!mb) {
+		fprintf(stderr, "JGR FATAL: Can't get main bundle!\n");
+		return -1;
+	} else {
+		CFURLRef rdurl = CFBundleCopyBundleURL(mb);
+		if (!rdurl) {
+			fprintf(stderr, "JGR FATAL: Can't get main bundle URL!\n");
+			return -1;
+		}
+		urls = CFURLCopyFileSystemPath(rdurl,kCFURLPOSIXPathStyle);
+		if (!urls) {
+			fprintf(stderr, "JGR FATAL: Can't get main bundle path!\n");
+			return -1;
+		}
+		CFRelease(rdurl);
+		CFRelease(mb);
+	}
+	
+	if (!CFStringGetCString(urls, buf, 1024, kCFStringEncodingUTF8)) {
+		fprintf(stderr, "JGR FATAL: Can't store main bundle path!\n");
+		return -1;
+	}
+	urll=strlen(buf);
+	urlcs=(char*)malloc(urll+1);
+	strcpy(urlcs, buf);
+	
+	if (dylib) strcpy(buf,dylib); else *buf=0;
 	
 	/* R_LIBS: library paths, colon-separated */
 	strcpy(buf,getenv("HOME"));
@@ -159,6 +176,7 @@ int main(int argc, char* argv[])
 		char *val=0;
 		if (!prefs[i]) break;
 		val=prefs[i++];
+#if SET_DEFAULT_PACKAGES
 		if (!strcmp(key,"DefaultPackages") && val) {
 			char *c=val, *d=val;
 			while (*c) {
@@ -176,6 +194,7 @@ int main(int argc, char* argv[])
 			setenv("R_DEFAULT_PACKAGES", val, 1);
 			setDefPkg=1;
 		}
+#endif
 #if 0
 		if (!strcmp(key,"AdditionalRLibraryPath") && val) {
 			printf("set (from prefs): R_LIBS=\"%s\"\n", val);
@@ -201,9 +220,9 @@ int main(int argc, char* argv[])
 	}
 		
 	setenv("R_HOME",(rhomerequest)?rhomerequest:DEFAULT_RHOME,(rhomerequest)?1:0);
-    rhome=getenv("R_HOME");
+	rhome=getenv("R_HOME");
     
-    printf("JGR R_HOME: %s\n", rhome);
+	printf("JGR R_HOME: %s\n", rhome);
 	
 	libroot = getenv("R_LIBS");
 	if (libroot && *libroot) {
@@ -289,7 +308,9 @@ chkJGRpkg:
 		}
 	}
 	
+#if SET_DEFAULT_PACKAGES
 	if (!setDefPkg)	setenv("R_DEFAULT_PACKAGES", "utils,grDevices,graphics,stats,methods", 0);
+#endif
 	
 	if (!getenv("R_DOC_DIR")) {
 		strcpy(buf,rhome);	strcat(buf,"/doc");	setenv("R_DOC_DIR",buf,1);
@@ -301,8 +322,8 @@ chkJGRpkg:
 		strcpy(buf, getenv("R_HOME")); strcat(buf, "/share"); setenv("R_SHARE_DIR", buf, 1);
 	}
 
-*buf=0;
-if (dylib && *dylib) { strcpy(buf, dylib); strcat(buf, ":"); }
+	*buf=0;
+	if (dylib && *dylib) { strcpy(buf, dylib); strcat(buf, ":"); }
 //	strcpy(buf,"/lib:/usr/lib:"); /* we need to prepend system libraries, otherwise out gcc4 libs override the system - bad idea */
 
 	/* see if have all JAR dependencies that we need */
@@ -321,19 +342,10 @@ if (dylib && *dylib) { strcpy(buf, dylib); strcat(buf, ":"); }
 	   ExitToShell();		
 	}
 
-	/* try to find libjri */
-    strcpy(tbuf, libroot);
-    strcat(tbuf,"rJava/jri/libjri.jnilib");
-	/* sinve JGR 1.4-6 we force the use JRI's contents
-	   if (stat(tbuf, &sts)) {
-	   strcpy(tbuf, rhome);
-	   strcat(tbuf,"/library/JGR/cont/libjri.jnilib");
-	   if (stat(tbuf, &sts)) {
-		   strcpy(tbuf,urlcs);
-		   strcat(tbuf,"/Contents/Resources/libjri.jnilib");
-	   }
-   } */
-   printf("Attempting to load jnilib: %s\n", tbuf);
+	/* try to find libjri in rJava */
+	strcpy(tbuf, libroot);
+	strcat(tbuf,"rJava/jri/libjri.jnilib");
+	printf("Attempting to load jnilib: %s\n", tbuf);
 	/* check whether the libjri is also functional */
 	const struct mach_header* mh = NSAddImage(tbuf, NSADDIMAGE_OPTION_RETURN_ON_ERROR|NSADDIMAGE_OPTION_WITH_SEARCHING);
 	if (!mh) {
@@ -349,44 +361,26 @@ if (dylib && *dylib) { strcpy(buf, dylib); strcat(buf, ":"); }
 	   return 1;
 	}
 	
-   printf("Succeeded in loading jnilib, looks good.\n");
-   tbuf[strlen(tbuf)-14]=0; /* remove /libjri.jnilib from the path */
-   strcpy(jrilib, tbuf);
+	printf("Succeeded in loading jnilib, looks good.\n");
+	tbuf[strlen(tbuf)-14]=0; /* remove /libjri.jnilib from the path */
+	strcpy(jrilib, tbuf);
 	strcat(buf,tbuf);
-/*
-strcat(buf,":");
-    strcat(buf,rhome);
-    strcat(buf,"/lib:");
-#ifdef arch_str
-	strcpy(tbuf, rhome); strcat(tbuf,"/lib"); strcat(tbuf, arch_str);
-	if (stat(tbuf, &sts)==0) {
-		strcat(buf,tbuf); strcat(buf,":"); 
-		puts("Universal build detected, appending arch " arch_str ".");
-	}
-#endif	
-    strcat(buf,rhome);
-    strcat(buf,"/bin");
-    if (dylib) {
-        strcat(buf,":");
-        strcat(buf,dylib);
-    }
- */
-    setenv("DYLD_LIBRARY_PATH",buf,1);
-    printf("JGR DYLD_LIBRARY_PATH: %s\n", buf);
+	setenv("DYLD_LIBRARY_PATH",buf,1);
+	printf("JGR DYLD_LIBRARY_PATH: %s\n", buf);
 
-strcpy(buf, "-Drjava.path=");
-strcat(buf, libroot);
-strcat(buf, "rJava");
-drJavaPath = strdup(buf);
+	strcpy(buf, "-Drjava.path=");
+	strcat(buf, libroot);
+	strcat(buf, "rJava");
+	drJavaPath = strdup(buf);
 
-strcpy(buf, libroot);
-strcat(buf, "rJava/java/boot");
-bootpath = strdup(buf);
+	strcpy(buf, libroot);
+	strcat(buf, "rJava/java/boot");
+	bootpath = strdup(buf);
 
-    chdir(getenv("HOME"));
-			
-strcpy(buf,"-Drjava.class.path=");
-    if (getenv("CLASSPATH")) {
+	chdir(getenv("HOME"));
+	
+	strcpy(buf,"-Drjava.class.path=");
+	if (getenv("CLASSPATH")) {
 		strcat(buf,getenv("CLASSPATH"));
 		strcat(buf,":");
 	}
@@ -403,20 +397,20 @@ strcpy(buf,"-Drjava.class.path=");
 	
 	strcat(buf,urlcs);  /* java class file */
 	strcat(buf,":");
-    strcat(buf, libroot); /* JRI */
+	strcat(buf, libroot); /* JRI */
 	strcat(buf, "rJava/jri/JRI.jar:");
-    strcat(buf, libroot); /* iplots */
+	strcat(buf, libroot); /* iplots */
 	strcat(buf, "iplots/java/iplots.jar:");
-    strcat(buf, libroot);  /* JGR */
-    strcat(buf, "JGR/java/JGR.jar");
+	strcat(buf, libroot);  /* JGR */
+	strcat(buf, "JGR/java/JGR.jar");
 	
-    printf("JGR CLASSPATH: %s\n", buf);
-    
-clspath=strdup(buf);
+	printf("JGR CLASSPATH: %s\n", buf);
+	
+	clspath=strdup(buf);
 	
 	strcpy(buf,"-Xdock:icon=");
-    strcat(buf,urlcs);
-    strcat(buf,"/Contents/Resources/JGR.icns");
+	strcat(buf,urlcs);
+	strcat(buf,"/Contents/Resources/JGR.icns");
 
 #ifdef arch_str
 	if (!getenv("R_ARCH")) {
@@ -451,12 +445,18 @@ clspath=strdup(buf);
 		jargv[argb--]="RJavaClassLoader";
 		jargv[argb--]=drJavaPath;
 		jargv[argb--]=clspath;
+#if SET_DEFAULT_PACKAGES
+		jargv[argb--]="-Djgr.load.pkgs=no";
+#else
+		jargv[argb--]="-Djgr.load.pkgs=yes";
+#endif
+		jargv[argb--]="-Djgr.loader.ver=" JGR_LOADER_VERSION;
 		jargv[argb--]="-Dmain.class=org.rosuda.JGR.JGR";
 		jargv[argb--]="-Dcom.apple.mrj.application.apple.menu.about.name=JGR";
 		jargv[argb--]="-Dapple.laf.useScreenMenuBar=true";
 		/* strcpy(tbuf,"-Djava.library.path="); strcat(tbuf, getenv("DYLD_LIBRARY_PATH")); jargv[argb--]=tbuf; */
 		jargv[argb--]=buf;
-		jargv[argb--]="-Xmx512m";
+		jargv[argb--]=xmx;
 		jargv[argb--]=bootpath;
 		jargv[argb--]="-cp";
 		/* final: program name */
