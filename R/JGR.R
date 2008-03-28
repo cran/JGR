@@ -1,11 +1,11 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.7-10
+# Package version: 1.7-11
 #
-# $Id: JGR.R 325 2012-08-23 03:41:00Z ifellows $
+# $Id: JGR.R 334 2012-09-16 06:01:17Z helbig $
 # (C)Copyright 2004-2011 Markus Helbig
-# (C)Copyright 2009,2011 Ian Fellows
-# (C)Copyright 2004,2006,2007 Simon Urbanek
+# (C)Copyright 2009,2012 Ian Fellows
+# (C)Copyright 2004,2006,2007,2012 Simon Urbanek
 # Licensed under GPL v2
 
 #==========================================================================
@@ -405,9 +405,9 @@ print.hsearch <- function(x, ...) {
     if (is.null(file)) return(FALSE)
   }
   if (usefile)
-    .javaGD.copy.device(source, useDevice, file=file, ...)
+    JavaGD:::.javaGD.copy.device(source, useDevice, file=file, ...)
   else
-    .javaGD.copy.device(source, useDevice, ...)
+    JavaGD:::.javaGD.copy.device(source, useDevice, ...)
   invisible(NULL)
 }
 

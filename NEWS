@@ -1,4 +1,7 @@
 Change Log
+1.7-11  (2012-09-16)
+    o   Adapt to JavaGD 0.6 release
+
 1.7-10  (2012-09-04)
     o   New object browser
     o   Moved many calls to R off the GUI eval thread and made them cancelable.

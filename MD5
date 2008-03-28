@@ -1,8 +1,8 @@
-8ccae890f3862779001d3886afd6c7c7 *DESCRIPTION
+78b0d15b04313ed39d3719af4612c8c0 *DESCRIPTION
 442ae9ce8c018b8fa10d1daec3019bd3 *NAMESPACE
-4ce650ac83502dd75867de8385c6ba0a *NEWS
-dc584c8d45bcd2b33e1771c3f33a4ebd *R/JGR.R
-1671c31827b1e9c014e020b6a0ddcb04 *inst/java/JGR.jar
+e798256c440eb40943184c89cda258c5 *NEWS
+ecf6419d6a444d633c122d6ff8673bf2 *R/JGR.R
+81f10c39b234a16d452714293b198ded *inst/java/JGR.jar
 84a97f8ec52715ae6dc2e6c5c02c2bef *inst/scripts/run.in
 ac3f1f2a31101be41a1520dbb105d0b4 *launcher/macosx/English.lproj/InfoPlist.strings
 808e9e03ae64da5fa08ea5a0d9ff9e3d *launcher/macosx/English.lproj/locversion.plist
