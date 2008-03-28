@@ -1,4 +1,10 @@
 Change Log
+1.7-7   (2011-05-22)
+    o   fixed CRAN warnings
+
+1.7-6   (2011-05-21)
+    o   add check for old GOMP and warn on the command line if present
+
 1.7-5   (2011-03-20)
     o	JGR() now launches new console on mac/windows
 

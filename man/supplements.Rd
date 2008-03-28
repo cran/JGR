@@ -1,5 +1,6 @@
 \name{jgr.supplements}
 \alias{JGR}
+\alias{broken.gomp}
 \alias{installPackages}
 \alias{jgr.pager}
 \alias{jgr.browser}
@@ -23,6 +24,7 @@
 }
 \usage{
 JGR(update = FALSE)
+broken.gomp()
 installPackages(contriburl = NULL, type = getOption("pkgType"))
 jgr.pager(file, header, title, delete.file)
 jgr.browser(url, ...)

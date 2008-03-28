@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.7-5
+# Package version: 1.7-7
 #
-# $Id: JGR.R 295 2011-01-29 04:04:12Z ifellows $
+# $Id: JGR.R 307 2011-05-21 07:43:37Z helbig $
 # (C)Copyright 2004-2011 Markus Helbig
 # (C)Copyright 2009,2011 Ian Fellows
 # (C)Copyright 2004,2006,2007 Simon Urbanek
@@ -12,6 +12,22 @@
 # initialization
 #==========================================================================
 
+## check for broken gomp implementations that don't work with threads
+broken.gomp <- function() {
+    # Linux may have the same issue, but we only care about OS X so far
+    if (length(grep("^darwin",R.version$os)) == 0) return(FALSE)
+    isTRUE(try({
+    f <- file(R.home("lib/libR.dylib"),"rb")
+    gomp <- FALSE
+    new.gomp <- FALSE
+    on.exit(close(f))
+    while (length(r<-readBin(f,"raw",20*1024*1024)) > 0) {
+      if(length(grepRaw("gomp_malloc", r, fixed=TRUE))) gomp <- TRUE
+      if(length(grepRaw("gomp_managed_threads", r, fixed=TRUE))) new.gomp <- TRUE
+    }
+    gomp && !new.gomp
+    }, silent=TRUE))
+}
 
 # library initialization:
 .First.lib <- function(lib, pkg) {
@@ -65,7 +81,10 @@
 	
 	# set repos
 	if (options("repos")=="@CRAN@") options(repos="http://cran.r-project.org")
-			
+
+  rv <- as.numeric(paste(R.version$major,as.integer(R.version$minor),sep='.'))
+  if (rv == 2.13 && broken.gomp())
+    cat("\n\n *** WARNING *** Your R contains old GOMP library which does NOT work with other threads!\n                 This will lead to random crashes in R!\n                 Please update R to the latest patched version from http://R.research.att.com/\n\n")
   	# add PackageInstaller
 	# jgr.addMenuItem("Packages","Package Installer","installPackages()")
 }
@@ -525,7 +544,7 @@ JGR <- function(update=FALSE)
 					  cat("\n Could not download launcher. Either you are\nnot connected to the internet, or you do not have permissins to the\nfolder:", 
 							  getwd())
 				  system("hdiutil mount JGR.dmg")
-				  system("cp -r /Volumes/JGR-1.6-SL/JGR.app JGR.app")
+				  system("cp -r /Volumes/JGR/JGR.app JGR.app")
 			  }
 			  launcher_loc <- "JGR.app"
 		  }
