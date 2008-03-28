@@ -15,6 +15,7 @@ WINDRES = x86_64-w64-mingw32-windres
 CFLAGS += -mno-cygwin -mwindows
 LDFLAGS += -mwindows -mno-cygwin
 else
+CC = gcc
 ifeq ($(XCPREFIX),)
 ifeq ($(shell i386-mingw32-gcc --version >/dev/null 2>&1 && echo OK),OK)
 XCPREFIX=i386-mingw32-
@@ -79,11 +80,14 @@ endif
 
 all: $(DST) $(OBJ)
 
-%.res.a: %.res
-	$(WINDRES) -i $^ -o $@
+jgr.res.a: jgr.rc jgr.ico
+	$(WINDRES) -i $< -o $@
 
 jgr.exe: jgr.o prefsp.o jgr.res.a
 	$(CC) $^ -o $@ $(LIBS) $(LDFLAGS)
+
+jselect.res.a: jselect.res
+	$(WINDRES) -i $^ -o $@
 
 jselect.exe: jselect.o jselect.res.a
 	$(CC) $^ -o $@ $(LIBS) $(LDFLAGS)
