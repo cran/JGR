@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.5-10
+# Package version: 1.5-11
 #
-# $Id: JGR.R 130 2008-03-23 12:28:33Z helbig $
+# $Id: JGR.R 131 2008-03-27 18:22:23Z helbig $
 # (C)Copyright 2004-2008 Markus Helbig
 # (C)Copyright 2004,2006,2007 Simon Urbanek
 # Licensed under GPL v2
@@ -11,10 +11,9 @@
 # initialization
 #==========================================================================
 
-library(utils)
-
 # library initialization:
 .First.lib <- function(lib, pkg) {
+  library(utils)
   ##cat("\nLoading additional JGR support...\n")
   library(rJava)
   je <- as.environment(match("package:JGR", search()))
