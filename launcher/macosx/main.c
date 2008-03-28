@@ -227,7 +227,7 @@ chkJGRpkg:
 	pass++;
 	
 	/* requires JGR 1.5-17 or higher */
-	if (getPkgVersion("JGR")<0x10511) strcat(npkg,"\"JGR\",");
+	if (getPkgVersion("JGR")<0x10512) strcat(npkg,"\"JGR\",");
 	/* requires rJava 0.5-0 or higher */
 	if (getPkgVersion("rJava")<0x500) strcat(npkg,"\"rJava\",");
 	/* requires JavaGD 0.4-2 or higher */

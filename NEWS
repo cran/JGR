@@ -1,4 +1,7 @@
 Change Log
+1.5-18 (2008-04-15)
+    o   fixed menu in TextPager and JavaGD
+
 1.5-17 (2008-04-13)
     o   fixed DataTable menu
 

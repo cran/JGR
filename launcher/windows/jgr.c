@@ -223,7 +223,7 @@ chkJGRpkg:
    if (!p) strcat(npkg,"\"JGR\",");
    else {
       fclose(p);
-      if (getPkgVersion("JGR")<0x10517) strcat(npkg,"\"JGR\",");
+      if (getPkgVersion("JGR")<0x10512) strcat(npkg,"\"JGR\",");
    }
 
    /* requires rJava 0.5 or higher (for JRI) */
