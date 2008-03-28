@@ -1,6 +1,11 @@
 Change Log
+1.5-12 (2008-03-30)
+    o   r-dev compatible
+    o   fixed some more bugs related to linenumbers in editor
+
 1.5-11 (2008-03-27)
     o   fixed text-selection using mouse
+
 1.5-10 (2008-03-23)
     o   fixed about/rhelp in editor
     o   added increase/decrease menuitems to Editor

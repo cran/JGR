@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.5-11
+# Package version: 1.5-12
 #
-# $Id: JGR.R 131 2008-03-27 18:22:23Z helbig $
+# $Id: JGR.R 132 2008-03-30 15:23:37Z helbig $
 # (C)Copyright 2004-2008 Markus Helbig
 # (C)Copyright 2004,2006,2007 Simon Urbanek
 # Licensed under GPL v2
@@ -10,6 +10,7 @@
 #==========================================================================
 # initialization
 #==========================================================================
+
 
 # library initialization:
 .First.lib <- function(lib, pkg) {
