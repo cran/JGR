@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.7-9
+# Package version: 1.7-10
 #
-# $Id: JGR.R 320 2011-10-24 07:10:48Z helbig $
+# $Id: JGR.R 325 2012-08-23 03:41:00Z ifellows $
 # (C)Copyright 2004-2011 Markus Helbig
 # (C)Copyright 2009,2011 Ian Fellows
 # (C)Copyright 2004,2006,2007 Simon Urbanek
@@ -29,18 +29,19 @@ broken.gomp <- function() {
     }, silent=TRUE))
 }
 
+.jgr.pkg.path <- NULL
+.jgr.works <- FALSE
+
 # library initialization:
-.First.lib <- function(lib, pkg) {
-  library(utils)
-  ##cat("\nLoading additional JGR support...\n")
-  library(rJava)
-  je <- as.environment(match("package:JGR", search()))
-  assign(".jgr.pkg.path", paste(lib,pkg,sep=.Platform$file.sep), je)
-  assign(".jgr.works", FALSE, je)
+.onLoad <- function(lib, pkg)  {
+  .jgr.pkg.path <<- paste(lib,pkg,sep=.Platform$file.sep)
+  .jgr.works <<- FALSE
+  #assign(".jgr.pkg.path", paste(lib,pkg,sep=.Platform$file.sep), je)
+  #assign(".jgr.works", FALSE, je)
   #assign(".jgr.env", new.env(), .je)
   
   ## we supply our own JavaGD class
-  .setenv <- if (exists("Sys.setenv")) Sys.setenv else Sys.putenv
+  .setenv <- Sys.setenv
   .setenv("JAVAGD_CLASS_NAME"="org/rosuda/JGR/toolkit/JavaGD")
 
   ## now load rJava for callbacks
@@ -59,12 +60,12 @@ broken.gomp <- function() {
   ## if any classes are missing or JGR was not started using main method, get out
   ## this should be true only if JGR was loaded into a "regular" R
   if (length(add.classes)>0 || !.jcall("org/rosuda/JGR/JGR","Z","isJGRmain")) {
-    cat("\nPlease type JGR() to download/launch console. Launchers can also be obtained at http://www.rforge.net/JGR/files/.\n\n")
+	packageStartupMessage("\nPlease type JGR() to download/launch console. Launchers can also be obtained at http://www.rforge.net/JGR/files/.\n\n")
     return(TRUE)
   }
 
   ## JGR actually works
-  assign(".jgr.works", TRUE, je)
+  .jgr.works <<- TRUE
 
 	# set JGR options unless the user doesn't want us to
 	if (Sys.getenv("JGR_NO_OPTIONS")=="")
@@ -84,7 +85,7 @@ broken.gomp <- function() {
 
   rv <- as.numeric(paste(R.version$major,as.integer(R.version$minor),sep='.'))
   if (rv == 2.13 && broken.gomp())
-    cat("\n\n *** WARNING *** Your R contains old GOMP library which does NOT work with other threads!\n                 This will lead to random crashes in R!\n                 Please update R to the latest patched version from http://R.research.att.com/\n\n")
+    packageStartupMessage("\n\n *** WARNING *** Your R contains old GOMP library which does NOT work with other threads!\n                 This will lead to random crashes in R!\n                 Please update R to the latest patched version from http://R.research.att.com/\n\n")
   	# add PackageInstaller
 	# jgr.addMenuItem("Packages","Package Installer","installPackages()")
 }

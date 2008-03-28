@@ -1,4 +1,9 @@
 Change Log
+1.7-10  (2012-09-04)
+    o   New object browser
+    o   Moved many calls to R off the GUI eval thread and made them cancelable.
+    o   Console remembers last height and width.
+
 1.7-9   (2011-11-16)
     o   fixed help search engine for R 2.14.x 
 

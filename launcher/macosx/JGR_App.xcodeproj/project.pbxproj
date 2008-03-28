@@ -141,7 +141,11 @@
 			isa = PBXProject;
 			buildConfigurationList = 28C3D35C09F27278005D5487 /* Build configuration list for PBXProject "JGR_App" */;
 			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 20286C29FDCF999611CA2CEA /* JGR */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -201,10 +205,8 @@
 		28B713C70AB863B100905B7E /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "x86_64 i386 ppc";
 				COPY_PHASE_STRIP = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
@@ -238,7 +240,9 @@
 		28B713C80AB863B100905B7E /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "x86_64 i386 ppc";
+				SDKROOT = macosx10.7;
 			};
 			name = Default;
 		};
@@ -316,14 +320,14 @@
 		28C3D35D09F27278005D5487 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				SDKROOT = macosx10.7;
 			};
 			name = Development;
 		};
 		28C3D35E09F27278005D5487 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SDKROOT = "";
+				SDKROOT = macosx10.7;
 			};
 			name = Deployment;
 		};

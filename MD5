@@ -1,13 +1,14 @@
-c97a1131c8ca89231f70941f0be254c9 *DESCRIPTION
-58f5e015f95d84f6cba61a5f0644832c *NEWS
-8779fdcf99e5dcb28ee349f0070f13a9 *R/JGR.R
-edc4bc8d3d11c16e0d676cc98182bba9 *inst/java/JGR.jar
+8ccae890f3862779001d3886afd6c7c7 *DESCRIPTION
+442ae9ce8c018b8fa10d1daec3019bd3 *NAMESPACE
+4ce650ac83502dd75867de8385c6ba0a *NEWS
+dc584c8d45bcd2b33e1771c3f33a4ebd *R/JGR.R
+1671c31827b1e9c014e020b6a0ddcb04 *inst/java/JGR.jar
 84a97f8ec52715ae6dc2e6c5c02c2bef *inst/scripts/run.in
 ac3f1f2a31101be41a1520dbb105d0b4 *launcher/macosx/English.lproj/InfoPlist.strings
 808e9e03ae64da5fa08ea5a0d9ff9e3d *launcher/macosx/English.lproj/locversion.plist
 ef745dae8d7eb14b01836912b6345b80 *launcher/macosx/Info.plist
 3992aa5d5de00ebceb7bd0ee39c6418c *launcher/macosx/JGR.icns
-88123a23cb4416b5b271a29934fe0563 *launcher/macosx/JGR_App.xcodeproj/project.pbxproj
+d88c428a11667eccb3ba6e126a6f839a *launcher/macosx/JGR_App.xcodeproj/project.pbxproj
 5f25ebb8c5cea470d7a5cf52f1cb182a *launcher/macosx/JGR_Prefix.pch
 8d4560a70532ec357ec32c8e8f6881d9 *launcher/macosx/javacf.c
 c23071dd3ca7ab54b2c5a6868e97702b *launcher/macosx/javacf.h
@@ -30,6 +31,6 @@ a57551b77721f1a5dc05c84a3bcf2a40 *man/jgr.addMenuItem.Rd
 f0ef29c594c0a05f8f2328401c822613 *man/jgr.addSubMenu.Rd
 83b9ebdd998612c66802f8d87fe06e4e *man/jgr.getMenuNames.Rd
 455fa50f055075c393064ed1950396a5 *man/jgr.removeMenu.Rd
-76b744d111647d9c413933995b26bf8a *man/supplements.Rd
+30c08e18a634c7a601a003a6bfcc251e *man/supplements.Rd
 84a97f8ec52715ae6dc2e6c5c02c2bef *run.in
 54b80fe871b3a51d6746bfdc5ccaf0d4 *version

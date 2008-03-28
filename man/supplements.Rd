@@ -31,7 +31,7 @@ jgr.browser(url, ...)
 jgr.set.options(..., useJavaGD = TRUE, useJGRpager = TRUE, useJGRbrowser = TRUE, useHTMLHelp = TRUE)
 object.browser()
 package.manager()
-print.hsearch(x, ...)
+\method{print}{hsearch}(x, ...)
 reformat.code(txt)
 }
 \arguments{
