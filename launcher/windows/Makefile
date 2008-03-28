@@ -9,6 +9,12 @@ SRC = $(wildcard *.c)
 OBJ = $(SRC:%.c=%.o)
 DST = jgr.exe jselect.exe
 
+ifneq ($(WIN64),)
+CC = x86_64-w64-mingw32-gcc
+WINDRES = x86_64-w64-mingw32-windres
+CFLAGS += -mno-cygwin -mwindows
+LDFLAGS += -mwindows -mno-cygwin
+else
 ifeq ($(XCPREFIX),)
 ifeq ($(shell i386-mingw32-gcc --version >/dev/null 2>&1 && echo OK),OK)
 XCPREFIX=i386-mingw32-
@@ -46,19 +52,23 @@ CC = $(XCROOT)/bin/$(XCPREFIX)gcc
 WINDRES = $(XCROOT)/bin/$(XCPREFIX)windres
 else
 # if the compiler is not in XCROOT, try to find it in PATH
-WHICHCC = $(shell which $(XCPREFIX)gcc)
+WHICHCC = $(shell which $(XCPREFIX)gcc 2>/dev/null)
 ifeq ($(shell test -e "$(WHICHCC)" && echo OK),OK)
 CC = $(WHICHCC)
 endif
-WHICHWR = $(shell which $(XCPREFIX)windres)
+WHICHWR = $(shell which $(XCPREFIX)windres 2>/dev/null)
 ifeq ($(shell test -e "$(WHICHWR)" && echo OK),OK)
 WINDRES = $(WHICHWR)
 endif
+endif
+ifeq ($(WINDRES),)
+WINDRES = windres
 endif
 
 CFLAGS+=-I$(XCROOT)/include -mno-cygwin -mwin32 -mwindows
 LDFLAGS+=-mwindows -mno-cygwin
 LIBS+=-L$(XCROOT)/lib
+endif
 
 ifeq ($(DEBUG),)
 LIBS+=-s
@@ -86,3 +96,4 @@ debug:
 
 clean:
 	rm -rf *~ *.o *.a \#* .\#* $(DST)
+

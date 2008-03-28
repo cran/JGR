@@ -1,4 +1,11 @@
 Change Log
+1.7-4   (2011-01-02)
+    o	fixed issues with locating package paths
+    o	Added R code auto-formatting to Editor
+    o	In editor, run on an empty selection runs line and advances caret.
+    o	Added italic comment preference item
+    o	read.spss now uses to.data.frame=TRUE option
+        
 1.7-3   (2010-10-09)
     o   fixed escaping of characters
 

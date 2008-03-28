@@ -7,6 +7,7 @@
 \alias{object.browser}
 \alias{package.manager}
 \alias{print.hsearch}
+\alias{reformat.code}
 \title{
   Supplemental JGR functions
 }
@@ -29,6 +30,7 @@ jgr.set.options(..., useJavaGD = TRUE, useJGRpager = TRUE, useJGRbrowser = TRUE,
 object.browser()
 package.manager()
 print.hsearch(x, ...)
+reformat.code(txt)
 }
 \arguments{
   \item{update}{If set to \code{TRUE} then JGR is updated for the RoSuDa
@@ -50,5 +52,6 @@ print.hsearch(x, ...)
   \item{useHTMLHelp}{if set to \code{TRUE}, HTML help used as the default}
   \item{...}{additional parameters or options to set}
   \item{x}{result of help.search}
+  \item{txt}{R code to be made pretty}
 }
 \keyword{programming}

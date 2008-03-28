@@ -7,9 +7,11 @@
 #include "prefsp.h"
 
 /* the version number should parse to a real number but is defined as a string */
-#define JGR_LOADER_VERSION "1.61"
+#define JGR_LOADER_VERSION "1.62"
 
 /* ChangeLog
+   1.62  - added support for multi-arch R, i386 and x64 archs
+
    1.61  - adds SET_DEFAULT_PACKAGES option (see below) and --libpath=xx, --rhome=xx
            Also -Xmx512m is now the default and can be overridden with -Xmx... argument
 */
@@ -44,6 +46,12 @@ static char *rhome=0;
 static char *temp=0, *ofn;
 static char *javah=0;
 
+#define RIT_SINGLE  0
+#define RIT_DUAL_32 1
+#define RIT_DUAL_64 2
+
+static int R_install_type = RIT_SINGLE;
+
 static char *path, *javakey, *java="javaw", *rhomerequest=0;
 static FILE *f = 0;
 
@@ -62,6 +70,9 @@ static void startDebug() {
 		GetVersionEx(&si);
 		fprintf(f, "System: Version %d.%d (build %d), platform %x [%s]\n\n", (int)si.dwMajorVersion,
 			(int)si.dwMinorVersion, (int)si.dwBuildNumber, (int)si.dwPlatformId, si.szCSDVersion);
+#ifdef WIN64
+		fprintf(f,"(64-bit Windows binary)\n");
+#endif
 		fprintf(f,"JGR loader version " JGR_LOADER_VERSION " (build " __DATE__ ")\n\n");
 		java = "java"; /* use console version of Java (as opposed to windowed javaw) */
 		fflush(f);
@@ -100,6 +111,21 @@ static void gfae(char *dbuf) {
   }
 }
 
+static char xtmp[1024];
+
+static int exists2(const char *a, const char *b) {
+  int res;
+  if (strlen(a) + strlen(b) > 1020) {
+    if (f) fprintf(f, "ERROR: too long path in exists2()\n");
+    return 0;
+  }
+  strcpy(xtmp, a);
+  strcat(xtmp, b);
+  
+  res = (GetFileAttributes(xtmp) != -1);
+  if (f) fprintf(f, "exists2('%s','%s') = %d\n", a, b, res);
+  return res;
+}
 
 static char dbuf[32768];
 static char npkg[32768];
@@ -246,7 +272,7 @@ PASCAL WinMain(HINSTANCE hInstance, HINSTANCE ii, LPSTR cmdl, int nCmdShow)
 
    if (!strncmp(cmdl,"--debug",7)) startDebug();
 
-   parseParams(cmdl, 10); /* we need extra 10 preceding pars as defined at the end */
+   parseParams(cmdl, 11); /* we need extra 10 preceding pars as defined at the end */
 
    if (!rhome) { /* if --rhome=.. was not specified, get it from registry */
      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,"SOFTWARE\\R-core\\R",0,KEY_QUERY_VALUE,&k)!=ERROR_SUCCESS ||
@@ -557,8 +583,28 @@ chkJGRpkg:
    }
    strcat(path,javah); strcat(path,"\\bin\\client;");
    strcat(path,javah); strcat(path,"\\bin;");
-   strcat(path,rhome); strcat(path,"\\bin;");
-   strcat(path,libpath); strcat(path,"\\rJava\\jri;");
+
+   strcat(path, rhome);
+   if (exists2(rhome, "\\bin\\i386\\R.dll")) {
+#ifdef WIN64
+     R_install_type = RIT_DUAL_64;
+     strcat(path, "\\bin\\x64;");
+     SetEnvironmentVariable("R_ARCH", "/x64");
+     if (f) fprintf(f, "Detected multi-arch R, 64-bit, using R_ARCH=/x64\n");
+#else
+     R_install_type = RIT_DUAL_32;
+     strcat(path, "\\bin\\i386;");
+     SetEnvironmentVariable("R_ARCH", "/i386");
+     if (f) fprintf(f, "Detected multi-arch R, 32-bit, using R_ARCH=/i386\n");
+#endif
+   } else /* single-arch */
+     strcat(path,"\\bin;");
+   strcat(path,libpath);
+   switch (R_install_type) {
+   case RIT_SINGLE: strcat(path, "\\rJava\\jri;"); break;
+   case RIT_DUAL_32: strcat(path, "\\rJava\\jri\\i386;"); break;
+   case RIT_DUAL_64: strcat(path, "\\rJava\\jri\\x64;"); break;
+   }
    strcat(path,tp);
 
    *allcp=0;
@@ -617,7 +663,12 @@ chkJGRpkg:
       strcpy(path,javah); strcat(path,"\\bin\\client;");
       strcat(path,javah); strcat(path,"\\bin;");
       strcat(path,rhome); strcat(path,"\\bin;");
-      strcat(path,libpath); strcat(path,"\\rJava\\jri;");
+      strcat(path,libpath);
+      switch (R_install_type) {
+      case RIT_SINGLE: strcat(path, "\\rJava\\jri;"); break;
+      case RIT_DUAL_32: strcat(path, "\\rJava\\jri\\i386;"); break;
+      case RIT_DUAL_64: strcat(path, "\\rJava\\jri\\x64;"); break;
+      }
       strcat(path,libpath); strcat(path,"\\JGR;");
       strcat(path,libpath); strcat(path,"\\JGR\\cont;");
       if (!SetEnvironmentVariable("PATH",path)) {
@@ -657,6 +708,7 @@ chkJGRpkg:
       fprintf(f, "desired PATH: \"%s\"\n", path);
       fprintf(f, "actual PATH: \"%s\"\n", envb);
       fprintf(f, "getenv PATH: \"%s\"\n", getenv("PATH"));
+      fprintf(f, "R_ARCH: \"%s\"\n", getenv("R_ARCH"));
    }
 
    if (debugLevel > 0 && !f) { /* debug level set in the preferences */
@@ -677,7 +729,12 @@ chkJGRpkg:
    argv[7]="-Djgr.load.pkgs=yes";
 #endif
    argv[8]="-Djgr.loader.ver=" JGR_LOADER_VERSION;
-   argv[9]="RJavaClassLoader";
+   switch (R_install_type) {
+   case RIT_DUAL_32: argv[9]="-Dr.arch=/i386"; break;
+   case RIT_DUAL_64: argv[9]="-Dr.arch=/x64"; break;
+   default: argv[9]="-Dr.noarch=true";
+   }
+   argv[10]="RJavaClassLoader";
    /* the remaining argvs were set by parseParams */
    argv[argc] = 0; /* set sentinel (parseParams leaves enough trailing space) */
 
@@ -692,7 +749,11 @@ chkJGRpkg:
    }
 
    /* now, let's rock ... */
+#ifdef WIN64
+   execvp(dbuf,(char* const*)argv);
+#else
    execvp(dbuf,(const char* const*)argv);
+#endif
 
    return 0;
 }

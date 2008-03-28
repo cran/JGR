@@ -1,8 +1,8 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.7-3
+# Package version: 1.7-4
 #
-# $Id: JGR.R 275 2010-09-24 08:12:00Z helbig $
+# $Id: JGR.R 287 2011-01-01 20:14:17Z ifellows $
 # (C)Copyright 2004-2010 Markus Helbig
 # (C)Copyright 2009,2010 Ian Fellows
 # (C)Copyright 2004,2006,2007 Simon Urbanek
@@ -36,9 +36,9 @@
   ## next make sure and JRI and iBase are present
   add.classes <- character()
   if (is.jnull(.jfindClass("org/rosuda/JRI/REXP",silent=TRUE)))
-    add.classes <- paste(installed.packages()["rJava","LibPath"],"rJava","jri","JRI.jar",sep=.Platform$file.sep)
+    add.classes <- system.file("jri","JRI.jar",package="rJava")
   if (is.jnull(.jfindClass("org/rosuda/ibase/Common",silent=TRUE)))
-    add.classes <- c(add.classes,paste(installed.packages()["iplots","LibPath"],"iplots","java","iplots.jar",sep=.Platform$file.sep))
+    add.classes <- c(add.classes, system.file("java","iplots.jar",package="iplots"))
 
   ## if any classes are missing or JGR was not started using main method, get out
   ## this should be true only if JGR was loaded into a "regular" R
@@ -485,7 +485,59 @@ JGR <- function(update=FALSE)
   }
   
   
-  
+  reformat.code <- function(txt){
+	  lns <- strsplit(txt,"\n")[[1]]
+	  for(i in 1:length(lns)){
+		  isBlank <- grepl("^\\s*$",lns[i])
+		  if(isBlank){
+			  lns[i] <- "\n.__blank__()"
+		  	  next
+		  }
+		  strt <- regexpr("#.*",lns[i])
+		  if(strt<0)
+			  next
+		  if(grepl("\"|'.*#.*\"|'",lns[i]))
+			  next
+		  #print(cmt)
+		  cmt <- substr(lns[i],strt,nchar(lns[i]))
+		  lns[i] <- sub(cmt,paste("\n.__comment__(\"",cmt,"\")\n",sep=""),lns[i],fixed=TRUE)
+		  #cat(lns[i],"\n")
+	  }
+	  
+	  mod_text <- paste(lns,collapse="\n")
+	  tidy.block <- function(block.text) {
+		  #from formatR
+		  exprs <- base::parse(text = block.text)
+		  n <- length(exprs)
+		  res <- character(n)
+		  for (i in 1:n) {
+			  dep <- paste(base::deparse(exprs[i]), 
+					  collapse = "\n")
+			  res[i] <- substring(dep, 12, nchar(dep) - 1)
+		  }
+		  return(res)
+	  }
+	  
+	  tidied <- tidy.block(mod_text)
+	  tidied <- do.call(c,strsplit(tidied,"\n"))
+	  for(i in 1:length(tidied)){
+		  l <- tidied[i]
+		  if(grepl(".__blank__()",l,fixed=TRUE)){
+			  tidied[i] <- sub(".__blank__()","",l,fixed=TRUE)
+			  next
+		  }
+		  if(!grepl(".__comment__",l,fixed=TRUE))
+			  next
+		  l <- sub(".__comment__(\"","",l,fixed=TRUE)
+		  l <- sub("\"\\)$|\n","",l)
+		  #print(l)
+		  tidied[i] <- l
+	  }
+	  leading <- floor(attr(regexpr(" *",tidied),"match.length")/4)
+	  for(i in 1:length(tidied))
+		  tidied[i] <- gsub("^ *",paste(rep("\t",leading[i]),"",sep="",collapse=""),tidied[i])
+	  return(paste(tidied,collapse="\n"))
+  }
 
 
 
