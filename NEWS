@@ -1,4 +1,9 @@
 Change Log
+1.6-3   (2008-02-07)
+    o   back and forward buttons in help browser remember page position
+    o   new datafile loader, which includes guessing of separator
+    o   some minor bugfixes/changes to the editor
+
 1.6-2	(2008-07-24)
     o	Windows launcher now supports --libpath=xx and --rhome=xx
 	command line arguments to override the location of R (by
