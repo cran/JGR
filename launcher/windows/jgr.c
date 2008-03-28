@@ -6,7 +6,7 @@
 #include <process.h>
 #include "prefsp.h"
 
-#define JGR_LOADER_VERSION "1.5-1"
+#define JGR_LOADER_VERSION "1.6"
 
 char RegStrBuf[32768];
 
@@ -217,13 +217,13 @@ PASCAL WinMain(HINSTANCE hInstance, HINSTANCE ii, LPSTR cmdl, int nCmdShow)
 chkJGRpkg:
    *npkg=0;
 
-   /* requires JGR 1.5-17 or higher */
+   /* requires JGR 1.5-19 or higher */
    strcpy(dbuf,srhome); strcat(dbuf,"\\library\\JGR\\java\\JGR.jar");
    p = fopen(dbuf,"r");
    if (!p) strcat(npkg,"\"JGR\",");
    else {
       fclose(p);
-      if (getPkgVersion("JGR")<0x10512) strcat(npkg,"\"JGR\",");
+      if (getPkgVersion("JGR")<0x10600) strcat(npkg,"\"JGR\",");
    }
 
    /* requires rJava 0.5 or higher (for JRI) */
@@ -284,8 +284,15 @@ chkJGRpkg:
       p = fopen(temp,"w");
 
       /*-------------- CRAN repository -------------*/
-      fprintf(p,"install.packages(c(%s),,c('http://cran.r-project.org/'))\n",npkg);
-      fclose(p);
+	  if (strstr(cmdl,"--rforge"))
+	  {
+		fprintf(p,"install.packages(c(%s),,c('http://rforge.net/'))\n",npkg);
+      }
+	  else 
+	  {
+	  	fprintf(p,"install.packages(c(%s),,c('http://cran.r-project.org/'))\n",npkg);
+      }
+	  fclose(p);
 
       temp = (char*) malloc(strlen(dbuf)+1); strcpy(temp,dbuf);
 
@@ -359,7 +366,7 @@ chkJGRpkg:
    	      c++;
    	  }
    	  *d=0;
-       /* if (!strstr(val, "JGR")) {
+       /*   if (!strstr(val, "JGR")) {
    		   char *c=(char*) malloc(strlen(val)+5);
    		   strcpy(c, val);
    		   strcat(c, ",JGR");

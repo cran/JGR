@@ -8,7 +8,7 @@
 #include "prefsp.h"
 #include "javacf.h"
 
-#define JGR_LOADER_VERSION "1.5-1"
+#define JGR_LOADER_VERSION "1.6"
 #define JGR_LOADER_GENERATION 2
 
 #define DEFAULT_RHOME "/Library/Frameworks/R.framework/Resources"
@@ -226,8 +226,8 @@ chkJGRpkg:
 	*npkg=0;
 	pass++;
 	
-	/* requires JGR 1.5-17 or higher */
-	if (getPkgVersion("JGR")<0x10512) strcat(npkg,"\"JGR\",");
+	/* requires JGR 1.6-0 or higher */
+	if (getPkgVersion("JGR")<0x10600) strcat(npkg,"\"JGR\",");
 	/* requires rJava 0.5-0 or higher */
 	if (getPkgVersion("rJava")<0x500) strcat(npkg,"\"rJava\",");
 	/* requires JavaGD 0.4-2 or higher */

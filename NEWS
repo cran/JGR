@@ -1,4 +1,8 @@
 Change Log
+1.6-0  (2008-06-15)
+    o   load .JGRhistory from R working directory
+    o   new launchers -> JGR loads JGR R package itself
+
 1.5-18 (2008-04-15)
     o   fixed menu in TextPager and JavaGD
 
