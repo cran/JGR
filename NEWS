@@ -1,5 +1,16 @@
 Change Log
-1.6-3   (2008-02-07)
+
+1.6-4	(2009-06-01)
+    o	added informative error message when JRI is missing
+    o	Fixed output buffering. Displaying large output to console is faster.
+    o   reactivated possibility to set dataset name when loading a datafile
+    o   Fixed "Open Recent" in Editor
+    o   Fixed "Clear Console" command
+    o   Restructered menu to be consistent with RGui
+    o   ObjectManager, PackageManager, PackageInstaller as singleton
+    o   Editor, Datatable with automatic placement
+
+1.6-3   (2009-02-07)
     o   back and forward buttons in help browser remember page position
     o   new datafile loader, which includes guessing of separator
     o   some minor bugfixes/changes to the editor

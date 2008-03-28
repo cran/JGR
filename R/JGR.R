@@ -1,9 +1,10 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.6-3
+# Package version: 1.6-4
 #
-# $Id: JGR.R 163 2009-01-31 15:24:18Z helbig $
+# $Id: JGR.R 201 2009-05-27 09:08:47Z helbig $
 # (C)Copyright 2004-2009 Markus Helbig
+# (C)Copyright 2009 Ian Fellows
 # (C)Copyright 2004,2006,2007 Simon Urbanek
 # Licensed under GPL v2
 
@@ -69,51 +70,48 @@
 	.refreshHelpFiles()
 
   	# add PackageInstaller
-	jgr.addMenuItem("Packages","Package Installer","installPackages()")
+	# jgr.addMenuItem("Packages","Package Installer","installPackages()")
 }
 
 
 package.manager <- function() {
   if (!.jgr.works) { cat("package.manager() cannot be used outside JGR.\n"); return(invisible(NULL)) }
-	f <- .jnew("org/rosuda/JGR/JGRPackageManager")
-	invisible(.jcall(f,,"setVisible",TRUE))
+	f <- .jcall("org/rosuda/JGR/JGRPackageManager",,"showInstance")
 }
 
-installPackages <-
-function (contriburl = NULL, type = getOption("pkgType")) 
+installPackages <- function (contriburl = NULL, type = getOption("pkgType")) 
 {
-  if (!.jgr.works) { cat("installPackages() cannot be used outside JGR.\n"); return(invisible(NULL)) }
+    if (!.jgr.works) {
+        cat("installPackages() cannot be used outside JGR.\n")
+        return(invisible(NULL))
+    }
     if (type == "mac.binary") {
         if (R.version$major >= 2 && R.version$minor >= 2) 
             a <- available.packages(contriburl = contrib.url(getOption("repos"), 
-                type = "mac.binary"))
-        else if (R.version$major >= 2 && R.version$minor >= 1) 
-            a <- CRAN.packages(contriburl = contrib.url(getOption("repos"), 
-                type = "mac.binary"))
-        else a <- CRAN.packages(contriburl = contrib.url(getOption("CRAN"), 
-            type = "mac.binary"))
+															 type = "mac.binary"))
+				else if (R.version$major >= 2 && R.version$minor >= 1) 
+					a <- CRAN.packages(contriburl = contrib.url(getOption("repos"), 
+																type = "mac.binary"))
+						else a <- CRAN.packages(contriburl = contrib.url(getOption("CRAN"), 
+																		 type = "mac.binary"))
     }
-    else if (!is.null(contriburl)) 
-        if (R.version$major >= 2 && R.version$minor >= 2) 
-            a <- available.packages(contriburl = contriburl)
-        else
-        	   a <- CRAN.packages(contriburl = contriburl)
-    else if (R.version$major >= 2 && R.version$minor >= 2) 
-            a <- available.packages()
-        else
-        	   a <- CRAN.packages()
-    pkgs <- a[, 1]
-    if (length(pkgs) > 0) {
-        f <- .jnew("org/rosuda/JGR/JGRPackageInstaller", pkgs, 
-            type)
-        invisible(.jcall(f, , "setVisible", TRUE))
-    }
+		else if (!is.null(contriburl)) 
+			if (R.version$major >= 2 && R.version$minor >= 2) 
+				a <- available.packages(contriburl = contriburl)
+			else a <- CRAN.packages(contriburl = contriburl)
+		else if (R.version$major >= 2 && R.version$minor >= 2) 
+			a <- available.packages()
+		else a <- CRAN.packages()
+		pkgs <- a[, 1]
+		if (length(pkgs) > 0) {
+			invisible( .jcall("org/rosuda/JGR/JGRPackageInstaller",,"instAndDisplay",pkgs, 
+								type))
+		}
 }
 
 object.browser <- function() {
   if (!.jgr.works) { cat("object.browser() cannot be used outside JGR.\n"); return(invisible(NULL)) }
-	f <- .jnew("org/rosuda/JGR/JGRObjectManager")
-	invisible(.jcall(f,,"setVisible",TRUE))
+	f <- .jcall("org/rosuda/JGR/JGRObjectManager",,"showInstance")
 }
 
 jgr.pager <- function(file, header, title, delete.file) {
@@ -322,6 +320,8 @@ jgr.addMenuSeparator <- function(menu) {
 }
 
 .generate.run.script <- function(target=NULL) {
+  jri.jar <- system.file("jri","JRI.jar",package="rJava")
+  if (nchar(jri.jar) == 0) stop("JRI is required but missing! Make sure R was configured with --enable-R-shlib and rJava was compiled with JRI support.")
   run.template <- paste(.jgr.pkg.path,"scripts","run.in",sep=.Platform$file.sep)
   rt <- readLines(run.template)
   settings <- c("R_SHARE_DIR", "R_INCLUDE_DIR", "R_DOC_DIR", "R_LIBS", 
@@ -411,3 +411,10 @@ JGR <- function(update=FALSE)
       }
     }
   }
+  
+  
+  
+
+
+
+
