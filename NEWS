@@ -1,4 +1,7 @@
 Change Log
+1.6-6   (2009-06-08)
+    o   fixed editor file loading with multiple instances
+
 1.6-5   (2009-06-07)
     o   new preference dialog
     o   re-enabled help-agent in editor
