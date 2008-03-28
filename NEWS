@@ -1,4 +1,7 @@
 Change Log
+1.7-3   (2010-10-09)
+    o   fixed escaping of characters
+
 1.7-2   (2010-09-24)
     o   removed some deprecated functions
     o   redirect Java stdout to JGR console
