@@ -1,5 +1,0 @@
-//
-// Prefix header for all source files of the 'JGR' target in the 'JGR' project.
-//
-
-#include <Carbon/Carbon.h>

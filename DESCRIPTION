@@ -1,5 +1,5 @@
 Package: JGR
-Version: 1.7-11
+Version: 1.7-15
 Title: JGR - Java GUI for R
 Author: Markus Helbig <info@markushelbig.de>, Simon Urbanek, Ian
         Fellows
@@ -15,5 +15,6 @@ Description: Java GUI for R - cross-platform, universal and unified
         http://rforge.net/JGR/
 License: GPL-2
 URL: http://rforge.net/JGR/
+NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2012-09-16 06:15:54
+Date/Publication: 2013-05-10 16:44:11
