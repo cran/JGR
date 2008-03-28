@@ -1,4 +1,7 @@
 Change Log
+1.7-5   (2011-03-20)
+    o	JGR() now launches new console on mac/windows
+
 1.7-4   (2011-01-02)
     o	fixed issues with locating package paths
     o	Added R code auto-formatting to Editor

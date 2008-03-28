@@ -1,10 +1,10 @@
 #==========================================================================
 # JGR - Java Gui for R
-# Package version: 1.7-4
+# Package version: 1.7-5
 #
-# $Id: JGR.R 287 2011-01-01 20:14:17Z ifellows $
-# (C)Copyright 2004-2010 Markus Helbig
-# (C)Copyright 2009,2010 Ian Fellows
+# $Id: JGR.R 295 2011-01-29 04:04:12Z ifellows $
+# (C)Copyright 2004-2011 Markus Helbig
+# (C)Copyright 2009,2011 Ian Fellows
 # (C)Copyright 2004,2006,2007 Simon Urbanek
 # Licensed under GPL v2
 
@@ -43,7 +43,7 @@
   ## if any classes are missing or JGR was not started using main method, get out
   ## this should be true only if JGR was loaded into a "regular" R
   if (length(add.classes)>0 || !.jcall("org/rosuda/JGR/JGR","Z","isJGRmain")) {
-    cat("\nPlease use the corresponding JGR launcher to start JGR.\nRun JGR() for details. You can also use JGR(update=TRUE) to update JGR.\n\n")
+    cat("\nPlease type JGR() to download/launch console. Launchers can also be obtained at http://www.rforge.net/JGR/files/.\n\n")
     return(TRUE)
   }
 
@@ -422,6 +422,13 @@ print.hsearch <- function(x, ...) {
   for (i in names(sl))
     rt <- gsub(paste('@',i,'@',sep=''), sl[[i]], rt)
 
+  if(length(grep("darwin",R.version$os))){
+	  rt[length(rt)] <- paste(
+	  	"\"${JAVA}\" -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.apple.menu.about.name=JGR",
+	  	substring(rt[length(rt)],10))
+	  
+  }
+
   ## return back the entire file if there is no target
   if (is.null(target)) return(rt)
   
@@ -447,15 +454,20 @@ JGR <- function(update=FALSE)
       return (install.packages(c("JGR","rJava","JavaGD","iplots"), lt, c(cran,"http://www.rforge.net/")))
     }
     
-    # FIXME: we should invoke a start script ...
     if (.Platform$OS.type == "windows") {
-      cat("On Windows JGR must be started using the JGR.exe launcher.\nPlease visit http://www.rosuda.org/JGR/ to download it.\n")
-      return(invisible(FALSE))
+	  .generate.windows.script()		
+	  cat("Starting JGR ...\n\n")
+	  system("open jgrLaunch.bat")
+	  return(invisible(TRUE))
     }
 
     if (length(grep("darwin",R.version$os))>0) {
-      cat("Please use JGR.app launcher to start JGR.\nIt can be downloaded from http://www.rosuda.org/JGR/\n")
-      return(invisible(FALSE))
+	  
+	  cat("Starting JGR ...\n\n")
+	  .generate.mac.script()
+	  system("open -a Terminal.app jgrLaunch")
+	  system("open .")
+      return(invisible(TRUE))
     }
 
     runs <- paste(.jgr.pkg.path, "scripts", "run", sep=.Platform$file.sep)
@@ -484,6 +496,123 @@ JGR <- function(update=FALSE)
     }
   }
   
+  .generate.mac.script <- function(launcher_loc = NULL, 
+		  bit64 = NULL, outfile = "jgrLaunch") {
+	  rhome <- R.home()
+	  libs <- paste(.libPaths(), sep = ":", collapse = ";")
+	  if (is.null(bit64)) 
+		  bit64 <- .Machine$sizeof.pointer == 8L
+	  if (is.null(launcher_loc)) {
+		  root <- system.file(package = "JGR")
+		  res <- TRUE
+		  if (bit64) {
+			  if (!file.exists("JGR-SL.app")) {
+				  res <- try(download.file("http://www.rforge.net/JGR/web-files/JGR-1.6-SL.dmg", 
+								  "JGR-1.6-SL.dmg", method = "internal", mode = "wb"))
+				  if ("try-error" %in% class(res)) 
+					  cat("\n Could not download launcher. Either you are\nnot connected to the internet, or you do not have permissins to the\nfolder:", 
+							  getwd())
+				  system("hdiutil mount JGR-1.6-SL.dmg")
+				  system("cp -r /Volumes/JGR-1.6-SL/JGR.app JGR-SL.app")
+			  }
+			  launcher_loc <- "JGR-SL.app"
+		  }
+		  else {
+			  if (!file.exists("JGR.app")) {
+				  res <- try(download.file("http://www.rforge.net/JGR/web-files/JGR.dmg", 
+								  "JGR.dmg", method = "internal", mode = "wb"))
+				  if ("try-error" %in% class(res)) 
+					  cat("\n Could not download launcher. Either you are\nnot connected to the internet, or you do not have permissins to the\nfolder:", 
+							  getwd())
+				  system("hdiutil mount JGR.dmg")
+				  system("cp -r /Volumes/JGR-1.6-SL/JGR.app JGR.app")
+			  }
+			  launcher_loc <- "JGR.app"
+		  }
+	  }
+	  lib_path <- NULL
+	  for (library_path in .libPaths()) {
+		  if ("JGR" %in% .packages(lib.loc = library_path, all.available = TRUE)) {
+			  lib_path <- library_path
+			  break
+		  }
+	  }
+	  if (is.null(lib_path)) 
+		  cat("Could not find JGR in library directories")
+	  cmd <- paste("#!/bin/csh\n\nsetenv R_HOME ", rhome, "\n", 
+			  "setenv R_LIBS ", lib_path, "\n", "setenv R_LIBS_USER ", 
+			  libs, "\n", sep = "")
+	  cmd <- paste(cmd, "\n./", launcher_loc, "/Contents/MacOS/JGR\n\n", 
+			  sep = "")
+	  cat("\n\nCopy the following is a launch script for JGR\n\n")
+	  cat(cmd, "\n")
+	  cat("\n\n\n")
+	  cat(cmd, file = outfile)
+	  system(paste("chmod 755 ", outfile))
+	  invisible(cmd)
+  }
+  
+  .generate.windows.script <- function(launcher_loc = NULL, 
+		  bit64 = NULL, outfile = "jgrLaunch") {
+	  win <- Sys.info()[1] == "Windows"
+	  rhome <- R.home()
+	  libs <- paste(.libPaths(), sep = ";", collapse = ";")
+	  
+	  libs <- gsub("/", "\\\\", libs)
+	  rhome <- gsub("/", "\\\\", rhome)
+	  outfile <- paste(outfile, ".bat", sep = "")
+	  
+	  
+	  if (is.null(bit64)) 
+		  bit64 <- .Machine$sizeof.pointer == 8L
+
+	  
+	  if (is.null(launcher_loc)) {
+		  root <- system.file(package = "JGR")
+		  res <- TRUE
+		  if (bit64) {
+			  if(!file.exists("jgr-1_62-x64.exe"))
+			 	  res <- try(download.file("http://www.rforge.net/JGR/web-files/jgr-1_62-x64.exe","jgr-1_62-x64.exe",method="internal",mode="wb"))
+			  if("try-error" %in% class(res))
+				  cat("\n Could not download launcher. Either you are not connected to the internet, or you do not have permissins to the folder:",
+						  getwd())
+			  launcher_loc <- "jgr-1_62-x64.exe"
+		  }
+		  else {
+			  if(!file.exists("jgr-1_62.exe"))
+			  	  res <- try(download.file("http://www.rforge.net/JGR/web-files/jgr-1_62.exe","jgr-1_62.exe",method="internal",mode="wb"))
+			  if("try-error" %in% class(res))
+				  cat("\n Could not download launcher. Either you are not connected to the internet, or you do not have permissins to the folder:",
+						  getwd())
+			  launcher_loc <- "jgr-1_62.exe"
+		  }
+		  launcher_loc <- gsub("/", "\\\\", launcher_loc)
+		  
+	  }
+	  lib_path <- NULL
+	  for(library_path in .libPaths()){
+		  if("JGR" %in% .packages(lib.loc=library_path,all.available=TRUE)){
+			  lib_path <- library_path
+			  break
+		  }
+	  }
+	  if(is.null(lib_path))
+		  cat("Could not find JGR in library directories")
+	  lib_path <- gsub("/", "\\\\", lib_path)
+	  
+	  cmd <- paste("set R_HOME=", rhome, "\n", "set R_LIBS=", libs, 
+			  "\n", sep = "")
+	  
+	  cmd <- paste("set R_HOME=", rhome, "\n", "set R_LIBS=", lib_path, 
+			  "\n","set R_LIBS_USER=", libs, "\n", sep = "")
+	  cmd <- paste(cmd, launcher_loc, " --rhome=", rhome, " --libpath=", 
+			  lib_path, "\n",sep = "")
+	  cat("\n\nCopy the following into WordPad and save as \"jgrLaunch.bat\"\n\n")
+	  cat(cmd, "\n")
+	  cat("\n\n\n")
+	  cat(cmd, file = outfile)
+	  invisible(cmd)
+  }
   
   reformat.code <- function(txt){
 	  lns <- strsplit(txt,"\n")[[1]]
