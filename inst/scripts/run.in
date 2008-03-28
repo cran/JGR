@@ -39,7 +39,7 @@ if test -r "${HOME}/.JGRprefsrc"; then
         R_DEFAULT_PACKAGES="${packages}"
     fi
 else
-    R_DEFAULT_PACKAGES="utils, stats, rJava, methods, JGR, JavaGD, grDevices, graphics, datasets"
+    R_DEFAULT_PACKAGES="utils, stats, methods, grDevices, graphics, datasets"
 fi
 
 NO_SIG=1

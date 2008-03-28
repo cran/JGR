@@ -8,7 +8,7 @@
 #include "prefsp.h"
 #include "javacf.h"
 
-#define JGR_LOADER_VERSION "1.5-0"
+#define JGR_LOADER_VERSION "1.5-1"
 #define JGR_LOADER_GENERATION 2
 
 #define DEFAULT_RHOME "/Library/Frameworks/R.framework/Resources"
@@ -166,12 +166,12 @@ int main(int argc, char* argv[])
 				c++;
 			}
 			*d=0;
-			if (!strstr(val, "JGR")) {
+			/*if (!strstr(val, "JGR")) {
 				char *c=(char*) malloc(strlen(val)+5);
 				strcpy(c, val);
 				strcat(c, ",JGR");
 				val=c;
-			}
+			}*/
 			printf("set (from prefs): R_DEFAULT_PACKAGES=\"%s\"\n", val);
 			setenv("R_DEFAULT_PACKAGES", val, 1);
 			setDefPkg=1;
@@ -226,14 +226,14 @@ chkJGRpkg:
 	*npkg=0;
 	pass++;
 	
-	/* requires JGR 1.5-0 or higher */
-	if (getPkgVersion("JGR")<0x10500) strcat(npkg,"\"JGR\",");
+	/* requires JGR 1.5-17 or higher */
+	if (getPkgVersion("JGR")<0x10511) strcat(npkg,"\"JGR\",");
 	/* requires rJava 0.5-0 or higher */
 	if (getPkgVersion("rJava")<0x500) strcat(npkg,"\"rJava\",");
 	/* requires JavaGD 0.4-2 or higher */
 	if (getPkgVersion("JavaGD")<0x402) strcat(npkg,"\"JavaGD\",");
-	/* requires iplots 1.1-0 or higher */
-	if (getPkgVersion("iplots")<0x10100) strcat(npkg,"\"iplots\",");
+	/* requires iplots 1.1-2 or higher */
+	if (getPkgVersion("iplots")<0x10102) strcat(npkg,"\"iplots\",");
 
 #if 0
 	if (*npkg) { /* we won't install iWidgets on its own, but as a part of the full install - why not? */
@@ -289,7 +289,7 @@ chkJGRpkg:
 		}
 	}
 	
-	if (!setDefPkg)	setenv("R_DEFAULT_PACKAGES", "utils,graphics,stats,methods,JGR", 0);
+	if (!setDefPkg)	setenv("R_DEFAULT_PACKAGES", "utils,grDevices,graphics,stats,methods", 0);
 	
 	if (!getenv("R_DOC_DIR")) {
 		strcpy(buf,rhome);	strcat(buf,"/doc");	setenv("R_DOC_DIR",buf,1);

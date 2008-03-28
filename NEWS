@@ -1,4 +1,11 @@
 Change Log
+1.5-17 (2008-04-13)
+    o   fixed DataTable menu
+
+1.5-16 (2008-04-12)
+    o   real Swing Menu 
+    o   add grDevices to default packages
+
 1.5-15 (2008-04-08)
     o   fixed indentation and toggle comment
 

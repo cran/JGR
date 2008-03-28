@@ -6,7 +6,7 @@
 #include <process.h>
 #include "prefsp.h"
 
-#define JGR_LOADER_VERSION "1.5-0"
+#define JGR_LOADER_VERSION "1.5-1"
 
 char RegStrBuf[32768];
 
@@ -217,21 +217,21 @@ PASCAL WinMain(HINSTANCE hInstance, HINSTANCE ii, LPSTR cmdl, int nCmdShow)
 chkJGRpkg:
    *npkg=0;
 
-   /* requires JGR 1.5-0 or higher */
+   /* requires JGR 1.5-17 or higher */
    strcpy(dbuf,srhome); strcat(dbuf,"\\library\\JGR\\java\\JGR.jar");
    p = fopen(dbuf,"r");
    if (!p) strcat(npkg,"\"JGR\",");
    else {
       fclose(p);
-      if (getPkgVersion("JGR")<0x10500) strcat(npkg,"\"JGR\",");
+      if (getPkgVersion("JGR")<0x10517) strcat(npkg,"\"JGR\",");
    }
 
    /* requires rJava 0.5 or higher (for JRI) */
    if (getPkgVersion("rJava")<0x500) strcat(npkg,"\"rJava\",");
    /* requires JavaGD 0.4-2 or higher */
    if (getPkgVersion("JavaGD")<0x402) strcat(npkg,"\"JavaGD\",");
-   /* requires iplots 1.1-0 or higher (for ibase) */
-   if (getPkgVersion("iplots")<0x10008) strcat(npkg,"\"iplots\",");
+   /* requires iplots 1.1-2 or higher (for ibase) */
+   if (getPkgVersion("iplots")<0x10102) strcat(npkg,"\"iplots\",");
 
    if (*npkg) { /* we won't install iplots/iWidgets on its own, but
                    as a part of the full install - why not? */
@@ -359,12 +359,12 @@ chkJGRpkg:
    	      c++;
    	  }
    	  *d=0;
-        if (!strstr(val, "JGR")) {
+       /* if (!strstr(val, "JGR")) {
    		   char *c=(char*) malloc(strlen(val)+5);
    		   strcpy(c, val);
    		   strcat(c, ",JGR");
    	      val=c;
-   	  }
+   	  }*/
    	  if (f) fprintf(f,"set (from prefs): R_DEFAULT_PACKAGES=\"%s\"\n", val);
    	  SetEnvironmentVariable("R_DEFAULT_PACKAGES", val);
    	  setDefPkg=1;
@@ -395,8 +395,8 @@ chkJGRpkg:
    }
 
    if (!setDefPkg) {
-      SetEnvironmentVariable("R_DEFAULT_PACKAGES", "utils,grDevices,graphics,stats,methods,datasets,JGR");
-      if (f) fprintf(f, "Fallback default packages: utils,grDevices,graphics,stats,methods,datasets,JGR\n");
+      SetEnvironmentVariable("R_DEFAULT_PACKAGES", "utils,grDevices,graphics,stats,methods,datasets");
+      if (f) fprintf(f, "Fallback default packages: utils,grDevices,graphics,stats,methods,datasets\n");
    }
 
    javakey="Software\\JavaSoft\\Java Runtime Environment";

@@ -10,8 +10,8 @@ OBJ = $(SRC:%.c=%.o)
 DST = jgr.exe jselect.exe
 
 ifeq ($(XCPREFIX),)
-ifeq ($(shell i386-mingw32msvc-gcc --version >/dev/null 2>&1 && echo OK),OK)
-XCPREFIX=i386-mingw32msvc-
+ifeq ($(shell i386-mingw32-gcc --version >/dev/null 2>&1 && echo OK),OK)
+XCPREFIX=i386-mingw32-
 else
 ifeq ($(shell i686-pc-mingw32-gcc --version >/dev/null 2>&1 && echo OK),OK)
 XCPREFIX=i686-pc-mingw32-
