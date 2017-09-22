@@ -1,7 +1,29 @@
 Change Log
 
+1.8-3   (2017-09-22)
+    o   found a way around last CRAN Warning
+
+1.8-2   (2017-09-20)
+    o   fixed last CRAN NOTE
+
+1.8-1   (2017-09-20)
+    o   fixed some more NOTEs
+
+1.8-0   (2017-09-20)
+    o   moved to http://github.com/markush81/JGR
+    o   build R package with gradle, with one simple ./gradlew build
+    o   simple mkdist
+    o   fixed some R CMD CHECK --as-cran NOTES
+
+1.7-18  (2017-09-11)
+    o   use ls(all=TRUE) to delete workspace
+
+1.7-17  (2015-01-20)
+    o   fixed REXPMissmatchExceptions thrown by refreshObjects
+    o   changed getting httpPort
+
 1.7-16  (2013-12-21)
-    o	Added launchJGR for JGR launcher 2.0 compatibility. This allows JGR to 
+    o	Added launchJGR for JGR launcher 2.0 compatibility. This allows JGR to
 	be launched directly from R maintaining all environmental variables and
 	paths of all packages.
     o	New Mac and Windows launchers.
@@ -27,13 +49,13 @@ Change Log
     o   Console remembers last height and width.
 
 1.7-9   (2011-11-16)
-    o   fixed help search engine for R 2.14.x 
+    o   fixed help search engine for R 2.14.x
 
 1.7-8   (2011-10-24)
     o   Added support for loading xls and xlsx files
     o   implemented temporary fix for infinite recursion crash on mac os x
     o   new icon set (KDE Crystal)
-    
+
 1.7-7   (2011-05-22)
     o   fixed CRAN warnings
 
@@ -49,7 +71,7 @@ Change Log
     o	In editor, run on an empty selection runs line and advances caret.
     o	Added italic comment preference item
     o	read.spss now uses to.data.frame=TRUE option
-        
+
 1.7-3   (2010-10-09)
     o   fixed escaping of characters
 
@@ -58,12 +80,12 @@ Change Log
     o   redirect Java stdout to JGR console
     o   Fixed MacOS JavaGD resize deadlock bug
     o   Added JavaGD save support for png, jpeg, bmp, and tiff
-    o   Added ability to insert new menus, menu items, separators, 
+    o   Added ability to insert new menus, menu items, separators,
         and sub-menus. Menus and menu items can be removed.
     o   Fixed 100% CPU on start-up bug
-    o   Cancel button fixed on unix systems 
+    o   Cancel button fixed on unix systems
     o   use rJava 0.8-6
-    
+
 1.7-1   (2010-03-27)
     o   use rJava 0.8-3
 
@@ -80,7 +102,7 @@ Change Log
 
 1.6-7   (2009-06-10)
     o   fixed version number
- 
+
 1.6-6   (2009-06-08)
     o   fixed editor file loading with multiple instances
 
@@ -115,7 +137,7 @@ Change Log
 	but instead requested packages are loaded in JGR on startup.
 	This should make it easier to switch R versions.
 	(launcher version is now 1.61)
-    o   Unix start script will also no longer set R_DEFAULT_PACKAGES 
+    o   Unix start script will also no longer set R_DEFAULT_PACKAGES
         at startup
 
 1.6-1  (2008-06-18)
@@ -133,7 +155,7 @@ Change Log
     o   fixed DataTable menu
 
 1.5-16 (2008-04-12)
-    o   real Swing Menu 
+    o   real Swing Menu
     o   add grDevices to default packages
 
 1.5-15 (2008-04-08)
@@ -211,9 +233,8 @@ Change Log
 	which will break R (thanks to Frederik Elwert for testing)
 
     o	fix incompatibilities of some shells in the run script
-	(thanks to Frederik Elwert for a crucial hint) 
+	(thanks to Frederik Elwert for a crucial hint)
 
     o	fix SVN properties on some files
 
     o	add NEWS
-
