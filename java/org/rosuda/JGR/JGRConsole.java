@@ -514,7 +514,7 @@ public class JGRConsole extends TJFrame implements ActionListener, KeyListener,
             try {
                 SwingUtilities.invokeAndWait(doWork1);
             } catch (Exception e1) {
-                e1.printStackTrace();
+//                e1.printStackTrace();
             }
             final String s = JGR.rSync.waitForNotification();
             Runnable doWork2 = new Runnable() {
@@ -536,7 +536,7 @@ public class JGRConsole extends TJFrame implements ActionListener, KeyListener,
             try {
                 SwingUtilities.invokeAndWait(doWork2);
             } catch (Exception e) {
-                e.printStackTrace();
+//                e.printStackTrace();
             }
 
             return (s == null || s.length() == 0) ? "\n" : s + "\n";
@@ -704,7 +704,7 @@ public class JGRConsole extends TJFrame implements ActionListener, KeyListener,
                                     + "your workspace?\nAll unsaved objects will be deleted.",
                             "Clear Workspace", JOptionPane.YES_NO_OPTION);
             if (doIt == JOptionPane.OK_OPTION) {
-                execute("rm(list=ls(all=TRUE))");
+                execute("rm(list=setdiff(ls(), \"pkg\"))");
             }
         } else if (cmd == "search")
 
