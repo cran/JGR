@@ -1,11 +1,11 @@
-4bdd63a25cf29eab032fa8210874c4a5 *DESCRIPTION
+3568d42ef7f69b0640ed31b714da0c41 *DESCRIPTION
 5a22928eb23b2920e023b973d2905c92 *NAMESPACE
-cac45ff51158d07e9a55ab4c98d7800f *NEWS
-a062756681dabc61068389428ae90465 *R/JGR.R
+da9f6406c41a011ddd5bb49b282c441f *NEWS
+38d8a75563f84e54c43d06c5ee4f1222 *R/JGR.R
 3992aa5d5de00ebceb7bd0ee39c6418c *inst/icons/JGR.icns
 b039f1e3def8d0ed62b128660025ad8f *inst/icons/JGR.ico
 dc2617b84912fcbe693ee395573ff8fc *inst/icons/JGR.png
-1953bf7d87c9c29828a7c5ac5c66d41e *inst/java/JGR.jar
+7b7ce96941d1889a7b0f9641ec13c386 *inst/java/JGR.jar
 84a97f8ec52715ae6dc2e6c5c02c2bef *inst/scripts/run.in
 f4a87654658e2d911496f9ddee1f35ff *java/jedit/syntax/BatchFileTokenMarker.java
 7de1aab39c348e75f85261579e10a143 *java/jedit/syntax/CCTokenMarker.java
