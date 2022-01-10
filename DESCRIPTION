@@ -1,7 +1,7 @@
 Package: JGR
-Version: 1.9-0
+Version: 1.9-1
 Title: Java GUI for R
-Date: 2021-12-30
+Date: 2022-01-08
 Author: Markus Helbig <mhelbig81@googlemail.com>, Simon Urbanek, Ian Fellows
 Maintainer: Markus Helbig <mhelbig81@googlemail.com>
 SystemRequirements: Java JDK 1.8 or higher
@@ -10,7 +10,7 @@ Suggests: XLConnect
 Description: Java GUI for R - cross-platform, universal and unified Graphical User Interface for R. For full functionality on Windows and Mac OS X JGR requires a start application which depends on your OS.
 License: GPL-2
 URL: http://rforge.net/JGR/
-Packaged: 2021-12-30 14:19:138 CET
+Packaged: 2022-01-08 08:59:858 CET
 NeedsCompilation: no
 Repository: CRAN
-Date/Publication: 2022-01-03 10:40:16 UTC
+Date/Publication: 2022-01-10 12:32:45 UTC

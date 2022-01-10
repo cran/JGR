@@ -1,11 +1,11 @@
-390214167a10b4bbbba178729d75532d *DESCRIPTION
+f36eb9254f340a9c3fbea20af2caafca *DESCRIPTION
 5a22928eb23b2920e023b973d2905c92 *NAMESPACE
-81333322c54917667ea770a6fb44f791 *NEWS
-d4453e913b33741ba913f11fb2bffdc0 *R/JGR.R
+8278efbbd0cf47733211b8b8689c28e0 *NEWS
+66084ac55cddaf4368ddb830d86f4b29 *R/JGR.R
 3992aa5d5de00ebceb7bd0ee39c6418c *inst/icons/JGR.icns
 b039f1e3def8d0ed62b128660025ad8f *inst/icons/JGR.ico
 dc2617b84912fcbe693ee395573ff8fc *inst/icons/JGR.png
-eb91695bb6f549e5e55ade451fca699e *inst/java/JGR.jar
+2af3b8c3275c19c61afcc1924013a675 *inst/java/JGR.jar
 84a97f8ec52715ae6dc2e6c5c02c2bef *inst/scripts/run.in
 f4a87654658e2d911496f9ddee1f35ff *java/jedit/syntax/BatchFileTokenMarker.java
 7de1aab39c348e75f85261579e10a143 *java/jedit/syntax/CCTokenMarker.java
@@ -43,7 +43,7 @@ c2651eb3aa659f43739801584aa1ead8 *java/jedit/syntax/TextAreaPainter.java
 05dc17c4b18b7789b7e5a24d28357bf1 *java/jedit/syntax/XMLTokenMarker.java
 f6a6326a2649206c02276d045c1432ed *java/org/rosuda/JGR/DataLoader.java
 892f569a555ba9c07a568a7c0c4fa63a *java/org/rosuda/JGR/GPL.txt
-854d6092f2373266f15207dc1d5fffa2 *java/org/rosuda/JGR/JGR.java
+667f2184abeef639720e1dd105534bdc *java/org/rosuda/JGR/JGR.java
 bef078208f7c171f47e99fd7b58d9976 *java/org/rosuda/JGR/JGRConsole.java
 02c95d16875a91dfedcd92421cd8ce7f *java/org/rosuda/JGR/JGRDataFileDialog.java
 633b4c2581886497b2ee2884810756af *java/org/rosuda/JGR/JGRDataFileOpenDialog.java
