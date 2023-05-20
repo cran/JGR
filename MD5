@@ -1,11 +1,11 @@
-f36eb9254f340a9c3fbea20af2caafca *DESCRIPTION
+11b2130a99a308080327d587e92ba730 *DESCRIPTION
 5a22928eb23b2920e023b973d2905c92 *NAMESPACE
 8278efbbd0cf47733211b8b8689c28e0 *NEWS
-66084ac55cddaf4368ddb830d86f4b29 *R/JGR.R
+9a13c267c3d4490782b63c0456bba395 *R/JGR.R
 3992aa5d5de00ebceb7bd0ee39c6418c *inst/icons/JGR.icns
 b039f1e3def8d0ed62b128660025ad8f *inst/icons/JGR.ico
 dc2617b84912fcbe693ee395573ff8fc *inst/icons/JGR.png
-2af3b8c3275c19c61afcc1924013a675 *inst/java/JGR.jar
+df12ab65edb685a5c2b71adf32165ac8 *inst/java/JGR.jar
 84a97f8ec52715ae6dc2e6c5c02c2bef *inst/scripts/run.in
 f4a87654658e2d911496f9ddee1f35ff *java/jedit/syntax/BatchFileTokenMarker.java
 7de1aab39c348e75f85261579e10a143 *java/jedit/syntax/CCTokenMarker.java
@@ -117,6 +117,7 @@ f29fba2a5caba2b9f695b8a54dcd406c *java/org/rosuda/JGR/toolkit/TextTransferHandle
 90eee19a072d7a9342670c2efe9094c9 *java/org/rosuda/JGR/util/DocumentRenderer.java
 b83b31e446412e1a32956f282046d5d1 *java/org/rosuda/JGR/util/ErrorMsg.java
 145f9296bc37bde1186b019ae5c341cb *java/org/rosuda/JGR/util/TableSorter.java
+0e40d27c51f7ff0d0cd8176e7c7873a9 *man/internals.Rd
 c8ae798eb1fea0823203798bb3a4c419 *man/jgr.addMenu.Rd
 a57551b77721f1a5dc05c84a3bcf2a40 *man/jgr.addMenuItem.Rd
 f77fad3bf20e8f07108619e2fe889fd8 *man/jgr.addMenuSeperator.Rd
